@@ -1,3 +1,11 @@
+Environment setup:
+
+    python3 -m venv venv
+     
+    . venv/bin/activate
+    pip install Flask
+    
+
 REST API description here
 
     register:
