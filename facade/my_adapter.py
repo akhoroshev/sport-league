@@ -118,6 +118,7 @@ class DB:
             raise Exception('No such wallet in database')
         return result[0]
 
+    @staticmethod
     def get_user_name(user_id):
         statement = 'SELECT * FROM users WHERE user_id=%s'
 
