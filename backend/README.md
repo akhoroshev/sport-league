@@ -4,6 +4,8 @@ Environment setup:
      
     . venv/bin/activate
     pip install Flask
+    pip install requests
+    pip install pylint
     
 
 REST API description here
