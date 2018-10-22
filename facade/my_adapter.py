@@ -132,5 +132,3 @@ class DB:
             raise Exception('No such wallet in database')
         return result[1]
 
-statement = 'SELECT * FROM users WHERE name=%s'
-
