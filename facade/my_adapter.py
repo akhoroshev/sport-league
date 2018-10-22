@@ -105,31 +105,23 @@ class DB:
 
     @staticmethod
     def get_user_id(name):
-        statement = 'SELECT * FROM users WHERE name=%s'
-
-        params = (name)
-
-        sql = statement % (
-            ''.join(name)
-        )
-        c = DB.query(sql, params)
+        statement = 'SELECT * FROM users WHERE name=\'%s\';'
+        sql = statement % name
+        print(sql)
+        c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such wallet in database')
-        return result[0]
+            raise Exception('No such user in database')
+        return result[0][0]
 
     @staticmethod
     def get_user_name(user_id):
-        statement = 'SELECT * FROM users WHERE user_id=%s'
-
-        params = (user_id)
-
-        sql = statement % (
-            ''.join(user_id)
-        )
-        c = DB.query(sql, params)
+        statement = 'SELECT * FROM users WHERE user_id=\'%s\';'
+        sql = statement % user_id
+        print(sql)
+        c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such wallet in database')
-        return result[1]
+            raise Exception('No such user in database')
+        return result[0][1]
 
