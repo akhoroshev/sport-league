@@ -358,6 +358,7 @@ class DB:
         if DB.get_event_admin_id(event_id) is None:
             return 0, 0
         DB.add_participant(user_id, event_id, 'D')
+        return 0, 0
 
     @staticmethod
     def leave_event(user_id, event_id):
