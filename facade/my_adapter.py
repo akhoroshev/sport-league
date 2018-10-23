@@ -430,9 +430,19 @@ class DB:
         return lst, 0, 0
 
     @staticmethod
-    def remove_follows(user_id, sport_id):
-        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (
-            user_id, sport_id)
+    def remove_follows(user_id, sport_id=0, location=0):
+        if not sport_id and not location:
+            sql = "DELETE FROM follows WHERE user_id=\'%s\'" % (
+            user_id)
+        elif not location:
+            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (
+                user_id, sport_id)
+        elif not sport_id:
+            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND location=\'%s\'" % (
+                user_id, location)
+        else:
+            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\' AND location=\'%s\'" % (
+                user_id, sport_id, location)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
@@ -440,11 +450,10 @@ class DB:
 
     @staticmethod
     def get_list_locations():
-        sql = "SELECT * FROM places"
+        sql = 'SELECT * FROM places;'
         c = DB.query(sql)
         result = c.fetchall()
-        return result, 0, 0
-
+        return result, 0, None
 
     @staticmethod
     def get_user_events(username):
@@ -456,6 +465,3 @@ class DB:
         for res in result:
             lst.append(res[1])
         return lst, 0, None
-
-DB.connect()
-
