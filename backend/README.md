@@ -5,7 +5,6 @@ Environment setup:
     . venv/bin/activate
     pip install Flask
     pip install requests
-    pip install pylint
     pip install mysqlpy
     
 
@@ -13,17 +12,19 @@ REST API description here
 
 1. common result format:
 
-    result: {
-                status: 0
-                data: ...
-            }
+
+        result: {
+                    status: 0
+                    data: ...
+                }
+
 
 or
 
-    result: {
-              status: 1
-              error: "error description"
-            }
+        result: {
+                    status: 1
+                    error: "error description"
+                }
 
 2. data format:
 
