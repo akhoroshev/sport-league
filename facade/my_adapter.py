@@ -1,10 +1,11 @@
 import mysql.connector
 
 mysqlparams = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
-    'database': 'staff'
+    'user': 'user',
+    'password': 'userpswd',
+    'host': '192.168.43.192',
+    'database': 'databasename',
+    'auth_plugin': 'sha256_password'
 }
 
 
@@ -20,13 +21,13 @@ class DB:
     @staticmethod
     def query(sql, params=tuple()):
         try:
-            cursor = DB.conn.cursor()
-            cursor.execute(sql, params)
+            DB.cursor = DB.conn.cursor()
+            DB.cursor.execute(sql, params)
         except (AttributeError, mysql.connector.OperationalError) as e:
             DB.connect()
-            cursor = DB.conn.cursor()
-            cursor.execute(sql, params)
-        return cursor
+            DB.cursor = DB.conn.cursor()
+            DB.cursor.execute(sql, params)
+        return DB.cursor
 
     @staticmethod
     def add_user(name, user_password):
@@ -437,5 +438,6 @@ class DB:
         DB.conn.commit()
         return 0, 0
 
-DB.add_place('stadium', 'ssda', 1.4, 56.5)
+DB.connect()
+DB.add_place('tadium', 'ssda', 10, 60)
 
