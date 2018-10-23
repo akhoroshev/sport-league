@@ -342,7 +342,7 @@ class DB:
         DB.add_event(
             admin_id,
             sport_id,
-            '2008-10-23 10:37:22',
+            timestamp,
             location,
             description,
             participants_number_max,

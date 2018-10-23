@@ -113,8 +113,9 @@ def get_event(**options):
     if status:
         return response_error(status, error)
 
-    dt = datetime.strptime(event_info['timestamp'], '%Y-%m-%d %H:%M:%S')
-    event_info['timestamp'] = dt.timestamp()
+    # dt = datetime.strptime(event_info['timestamp'], '%Y-%m-%d %H:%M:%S')
+    dt = event_info['timestamp']
+    event_info['timestamp'] = int(dt.timestamp())
 
     participants, status, error = DB.get_event_participants(options['event_id'])
     if status:
