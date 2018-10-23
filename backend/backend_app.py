@@ -11,6 +11,7 @@ from mock_adapter import DB
 
 app = Flask(__name__)
 
+
 def request_json_fields(*keys):
     def wrapper(func):
         def body(*args, **kwargs):
@@ -36,9 +37,11 @@ def response_ok(data={}):
 
 
 @app.route('/register', methods=['POST'])
-@request_json_fields('username', 'password')
+@request_json_fields('username',
+                     'password')
 def register(**options):
-    status, error = DB.create_user(options['username'], options['password'])
+    status, error = DB.create_user(options['username'],
+                                   options['password'])
     if status:
         return response_error(status, error)
 
@@ -51,9 +54,14 @@ def create_event(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-    
-    event_id, status, error = DB.create_event(user_id, options['sport_id'],
-            options['timestamp'], options['location'], options['description'], options['participants_number_max'], options['status_rating'])
+
+    event_id, status, error = DB.create_event(user_id,
+                                              options['sport_id'],
+                                              options['timestamp'],
+                                              options['location'],
+                                              options['description'],
+                                              options['participants_number_max'],
+                                              options['status_rating'])
     if status:
         return response_error(status, error)
 
@@ -66,17 +74,24 @@ def close_event(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-    
+
     admin_id, status, error = DB.get_event_admin_id(options['event_id'])
     if status:
         return response_error(status, error)
-    
+
     if admin_id != user_id:
         return response_error(1, 'you are not event admin')
 
     status, error = DB.update_event_status(options['event_id'], options['event_status'])
     if status:
         return response_error(status, error)
+
+    participants, status, error = DB.get_event_participants(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    if not all(elem in participants for elem in options['results'].keys()):
+        return response_error(1, "list of results doesnt match with participants")
 
     for username, result in options['results'].items():
         points = 2 if result == 'W' else 1 if result == 'D' else 0
@@ -145,7 +160,7 @@ def leave_event(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-    
+
     participants, status, error = DB.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
@@ -240,7 +255,7 @@ def get_list_follows(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-    
+
     events, status, error = DB.get_list_follows(user_id)
     if status:
         return response_error(status, error)
@@ -268,7 +283,7 @@ def remove_follow(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-    
+
     status, error = DB.remove_follows(user_id, options['sport_id'])
     if status:
         return response_error(status, error)

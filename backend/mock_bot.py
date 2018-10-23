@@ -3,8 +3,7 @@
 import requests
 
 
-def test_request(url='/test',
-                 data={'address_from':'bot', 'address_to':'flask'}):
+def test_request(url, data):
     res = requests.post('http://127.0.0.1:5000' + url, json=data)
 
     if res.ok:
@@ -27,7 +26,7 @@ if __name__ == '__main__':
                                    'participants_number_max': 20,
                                    'status_rating': True})
 
-    test_request('/event/close', {'username': 'niikkio', 
+    test_request('/event/close', {'username': 'niikkio',
                                   'password': 'qwerty123',
                                   'event_id': 12,
                                   'event_status': 'Canceled',
@@ -56,8 +55,8 @@ if __name__ == '__main__':
     test_request('/follow/list', {'username': 'niikkio', 'password': 'qwerty123'})
 
     test_request('/follow/add', {'username': 'niikkio',
-                                 'password': 'qwerty123', 
-                                 'sport_id': 12, 
+                                 'password': 'qwerty123',
+                                 'sport_id': 12,
                                  'location': 'Таймс'})
 
     test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty123', 'sport_id': 12})

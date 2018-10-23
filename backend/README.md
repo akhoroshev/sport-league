@@ -19,151 +19,146 @@ REST API description here
 
 or
 
-  result: {
+    result: {
               status: 1
               error: "error description"
-          }
+            }
 
 2. data format:
 
-    /register:
-        params: {   
-                    username: ...
-                    password: ...
-                }
-        data:   {
 
-                }
-
-    /event/create:
-        params: {
-                    username: ...
-                    password: ...
-                    sport_id: ...
-                    timestamp: ...
-                    location: ...
-                    description: ...
-                    size: ...
-                }
-        data:   {   
-                    event_id: ...
-                }
-
-    /event/close:
-        params: {
-                    username: ...
-                    password: ...
-                    event_id: ...
-                    event_status: ... ("CANCEL", "COMPLETE")
-                    results: {
-                        username1: result1,
-                        username2: result2
+        /register:
+            params: {   
+                        username: ...
+                        password: ...
                     }
-                }
-        data:   {
+            data:   {
+                    }
 
-                }
-
-    /event/get:
-        params: {
-                    event_id: ...
-                }
-        data:   {
-                    event_info: {
+        /event/create:
+            params: {
+                        username: ...
+                        password: ...
                         sport_id: ...
                         timestamp: ...
                         location: ...
                         description: ...
                         size: ...
                     }
+            data:   {   
+                        event_id: ...
+                    }
 
-                    participants: [...]
-                }
+        /event/close:
+            params: {
+                        username: ...
+                        password: ...
+                        event_id: ...
+                        event_status: ... ("CANCEL", "COMPLETE")
+                        results: {
+                            username1: result1,
+                            username2: result2
+                        }
+                    }
+            data:   {
+                    }
 
-    /event/list:
-        params: {
-                    sport_id: ...
-                }
-        data:   {
-                    event_ids: [...]
-                }
+        /event/get:
+            params: {
+                        event_id: ...
+                    }
+            data:   {
+                        event_info: {
+                            sport_id: ...
+                            timestamp: ...
+                            location: ...
+                            description: ...
+                            size: ...
+                        }
 
-    /event/join:
-        params: {
-                    username: ...
-                    password: ...
-                    event_id: ...
-                }
-        data:   {
+                        participants: [...]
+                    }
 
-                }
+        /event/list:
+            params: {
+                        sport_id: ...
+                    }
+            data:   {
+                        event_ids: [...]
+                    }
 
-    /event/leave:
-        params: {
-                    username: ...
-                    password: ...
-                    event_id: ...
-                }
-        data:   {
+        /event/join:
+            params: {
+                        username: ...
+                        password: ...
+                        event_id: ...
+                    }
+            data:   {
+                    }
 
-                }
+        /event/leave:
+            params: {
+                        username: ...
+                        password: ...
+                        event_id: ...
+                    }
+            data:   {
+                    }
 
-    /rating/global:
-        params: {
-                    sport_id: ...
-                }
-        data:   {
-                    usernameI: ratingI
-                    ...
-                }
+        /rating/global:
+            params: {
+                        sport_id: ...
+                    }
+            data:   {
+                        usernameI: ratingI
+                        ...
+                    }
 
-    /rating/local:
-        params: {
-                    sport_id: ...
-                    usernames: [...]
-                }
-        data:   {
-                    usernameI: ratingI
-                    ...
-                }
+        /rating/local:
+            params: {
+                        sport_id: ...
+                        usernames: [...]
+                    }
+            data:   {
+                        usernameI: ratingI
+                        ...
+                    }
 
-    /sport/list:
-        params: None
-        data:   {
-                    sport_idI:  {
-                                    name: ...
-                                    description: ...
-                                }
-                }
+        /sport/list:
+            params: None
+            data:   {
+                        sport_idI:  {
+                                        name: ...
+                                        description: ...
+                                    }
+                    }
 
-    /user/list:
-        params: {
-                    sport_id: ...
-                }
-        data:   {
-                    usernames: [...]
-                }
+        /user/list:
+            params: {
+                        sport_id: ...
+                    }
+            data:   {
+                        usernames: [...]
+                    }
 
-    /follow/list:
-        params: None
-        data:   {
-                    event_ids: [...]
-                }
+        /follow/list:
+            params: None
+            data:   {
+                        event_ids: [...]
+                    }
 
-    /follow/add:
-        params: {
-                    sport_id: ...
-                    location: ...
-                }
-        data:   {
+        /follow/add:
+            params: {
+                        sport_id: ...
+                        location: ...
+                    }
+            data:   {
+                    }
 
-                }
-
-    /follow/remove:
-        params: {
-                    sport_id: ...
-                }
-        data:   {
-
-                }
+        /follow/remove:
+            params: {
+                        sport_id: ...
+                    }
+            data:   {
+                    }
 
