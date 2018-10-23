@@ -438,6 +438,13 @@ class DB:
         DB.conn.commit()
         return 0, 0
 
+    @staticmethod
+    def get_list_locations():
+        sql = 'SELECT * FROM places;'
+        c = DB.query(sql)
+        result = c.fetchall()
+        return result, 0, None
+
 DB.connect()
 DB.add_place('tadium', 'ssda', 10, 60)
 
