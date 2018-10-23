@@ -223,7 +223,7 @@ class DB:
     @staticmethod
     def update_event_status(event_id, event_status):
         if DB.get_event_admin_id(event_id) == []:
-            return "No such event"
+            return 1, "No such event"
         statement = 'UPDATE events SET %s WHERE %s;'
         fields1 = ['state_open=\'%s\'']
         fields2 = ['event_id=\'%s\'']
@@ -236,6 +236,7 @@ class DB:
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
+        return 0, 0
 
     @staticmethod
     def set_result(event_id, username, result, points):
@@ -424,3 +425,5 @@ class DB:
         cursor.execute(sql)
         DB.conn.commit()
         return 0, 0
+
+
