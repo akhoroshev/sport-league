@@ -32,10 +32,10 @@ class DB:
         return cursor
 
     @staticmethod
-    def add_user(user_id, name, user_password):
+    def add_user(name, user_password):
         statement = 'INSERT INTO users(%s) VALUES(%s)'
-        fields = ['user_id', 'name', 'user_password']
-        params = (user_id, name, user_password)
+        fields = ['name', 'user_password']
+        params = (name, user_password)
 
         sql = statement % (
             ', '.join(fields),
@@ -45,10 +45,10 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
-    def add_sport(sport_id, name, description):
+    def add_sport(name, description):
         statement = 'INSERT INTO sports(%s) VALUES(%s)'
-        fields = ['sport_id', 'name', 'description']
-        params = (sport_id, name, description)
+        fields = ['name', 'description']
+        params = (name, description)
 
         sql = statement % (
             ', '.join(fields),
@@ -58,10 +58,10 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
-    def add_event(event_id, admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open):
+    def add_event(admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open):
         statement = 'INSERT INTO events(%s) VALUES(%s)'
-        fields = ['event_id', 'admin_id', 'sport_id', 'event_date', 'location', 'description', 'participants_number_max', 'status_rating', 'state_open']
-        params = (event_id, admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open)
+        fields = ['admin_id', 'sport_id', 'event_date', 'location', 'description', 'participants_number_max', 'status_rating', 'state_open']
+        params = (admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open)
 
         sql = statement % (
             ', '.join(fields),
@@ -97,10 +97,10 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
-    def add_following(user_id, sport_id, location, radius):
+    def add_follow(user_id, sport_id, location):
         statement = 'INSERT INTO follows(%s) VALUES(%s)'
-        fields = ['user_id', 'sport_id', 'location', 'radius']
-        params = (user_id, sport_id, location, radius)
+        fields = ['user_id', 'sport_id', 'location']
+        params = (user_id, sport_id, location)
 
         sql = statement % (
             ', '.join(fields),
@@ -194,7 +194,6 @@ class DB:
         sql = sql % params
         c = DB.query(sql)
         result = c.fetchall()
-#        print("get event_id={} admin".format(event_id))
         if len(result) == 0:
             print("No such event")
             return
@@ -216,15 +215,18 @@ class DB:
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
-#        print("set event_id={} status={}".format(event_id, event_status))
 
     @staticmethod
-    def set_result(sport_id, username, result):
+    def set_result(event_id, username, result, points):
+        sql = "SELECT * FROM events WHERE event_id=%s" % (event_id)
+        c = DB.query(sql)
+        res = c.fetchall()
+        sport_id = res[0][3]
         user_id = DB.get_user_id(username)
         statement = 'UPDATE ratings SET %s WHERE %s;'
         fields1 = ['points=\'%s\'', ]
-        fields2 = ['sport_id=\'%s\'', 'user_id=\'%s\'']
-        params = (result, sport_id, user_id)
+        fields2 = ['sport_id=%s', 'user_id=%s']
+        params = (points, sport_id, user_id)
         sql = statement % (
             ', '.join(fields1),
             ' AND '.join(fields2)
@@ -234,6 +236,20 @@ class DB:
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
+        statement = 'UPDATE participants SET %s WHERE %s;'
+        fields1 = ['result=\'%s\'', ]
+        fields2 = ['user_id=\'%s\'', 'event_id=\'%s\'']
+        params = (result, user_id, user_id)
+        sql = statement % (
+            ', '.join(fields1),
+            ' AND '.join(fields2)
+        )
+        sql = sql % params
+        print(sql)
+        cursor = DB.conn.cursor(buffered=True)
+        cursor.execute(sql)
+        DB.conn.commit()
+
         '''
         обновить результат для username в event_id
         должны обновляться обе таблицы - participants и ratings
@@ -372,9 +388,31 @@ class DB:
             lst.append(DB.get_user_name(res[0]))
         return lst
 
+    @staticmethod
+    def get_list_follows(user_id):
+        sql = "SELECT * FROM follows WHERE user_id=%s" % (user_id)
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(res[1])
+        return lst
+
+    @staticmethod
+    def remove_follows(user_id, sport_id):
+        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (user_id, sport_id)
+        cursor = DB.conn.cursor(buffered=True)
+        cursor.execute(sql)
+        DB.conn.commit()
 
 
-print(DB.get_list_users(1))
+db = DB()
+db.connect()
+db.set_result(3, 'Vasya', 'W', 20)
+
+
+
+
 
 
 
