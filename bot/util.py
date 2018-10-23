@@ -4,7 +4,7 @@ import datetime
 import time
 
 
-host_name = 'http://192.168.43.209:5000'
+host_name = 'http://backend:5000'
 
 
 def post(url, args={}, auth=None):

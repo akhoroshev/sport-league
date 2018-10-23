@@ -1,0 +1,4 @@
+Flask==1.0.2
+mysqlpy==8.0.12
+requests==2.20.0
+

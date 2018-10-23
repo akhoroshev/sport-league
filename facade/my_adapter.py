@@ -1,11 +1,11 @@
 import mysql.connector
 
 mysqlparams = {
-    'user': 'user',
-    'password': 'userpswd',
-    'host': '192.168.43.192',
-    'database': 'databasename',
-    'auth_plugin': 'sha256_password'
+    'user': 'database_user',
+    'password': 'database_password',
+    'host': 'db',
+    'database': 'database',
+    'auth_plugin': 'mysql_native_password'
 }
 
 
