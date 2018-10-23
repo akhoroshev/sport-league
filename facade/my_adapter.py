@@ -11,15 +11,11 @@ mysqlparams = {
 class DB:
     conn = None
     cursor = None
-    next_user_id = 0
-    next_event_id = 0
 
     @staticmethod
     def connect():
         DB.conn = mysql.connector.connect(**mysqlparams)
         DB.cursor = DB.conn.cursor()
-        DB.next_user_id = 1
-        DB.next_event_id = 1
 
     @staticmethod
     def query(sql, params=tuple()):
@@ -185,7 +181,7 @@ class DB:
         if password.isdigit():
             return 1, 'Password must contain also letters'
         DB.add_user(username, password)
-        DB.next_user_id += 1
+        return 0, 0
 
     @staticmethod
     def auth(username, password):
@@ -330,7 +326,6 @@ class DB:
             participants_number_max,
             status_rating):
         DB.add_event(
-            DB.next_event_id,
             admin_id,
             sport_id,
             timestamp,
@@ -339,8 +334,10 @@ class DB:
             participants_number_max,
             status_rating,
             'Opened')
-        DB.next_event_id += 1
-        return DB.next_event_id - 1, 0, 0
+        c = DB.query("SELECT LAST_INSERT_ID()")
+        last_id = c.fetchall();
+        DB.join_event(admin_id, last_id[0][0])
+        return 1, 0, 0
 
     @staticmethod
     def get_list_events(sport_id):
@@ -357,7 +354,7 @@ class DB:
     def join_event(user_id, event_id):
         if DB.get_event_admin_id(event_id) is None:
             return 0, 0
-        DB.add_participant(user_id, event_id, 'D')
+        DB.add_participant(user_id, event_id, None)
         return 0, 0
 
     @staticmethod
@@ -427,4 +424,5 @@ class DB:
         DB.conn.commit()
         return 0, 0
 
+DB.create_event(1, 1, '2008-10-23 10:37:22', 'location', 'description', 3, 5)
 
