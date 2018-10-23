@@ -5,7 +5,8 @@ mysqlparams = {
     'password': '',
     'host': 'localhost',
     'database': 'staff'
-    }
+}
+
 
 class DB:
     conn = None
@@ -58,10 +59,34 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
-    def add_event(admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open):
+    def add_event(
+            admin_id,
+            sport_id,
+            event_date,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            state_open):
         statement = 'INSERT INTO events(%s) VALUES(%s)'
-        fields = ['admin_id', 'sport_id', 'event_date', 'location', 'description', 'participants_number_max', 'status_rating', 'state_open']
-        params = (admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open)
+        fields = [
+            'admin_id',
+            'sport_id',
+            'event_date',
+            'location',
+            'description',
+            'participants_number_max',
+            'status_rating',
+            'state_open']
+        params = (
+            admin_id,
+            sport_id,
+            event_date,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            state_open)
 
         sql = statement % (
             ', '.join(fields),
@@ -116,7 +141,7 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such user in database')
+            return 'No such user in database'
         return result[0][0]
 
     @staticmethod
@@ -126,7 +151,7 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such user in database')
+            return 'No such user in database'
         return result[0][1]
 
     @staticmethod
@@ -136,7 +161,7 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such sport in database')
+            return 'No such sport in database'
         return result[0][0]
 
     @staticmethod
@@ -146,22 +171,21 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            raise Exception('No such user in database')
+            return 'No such user in database'
         return result[0][1]
 
     @staticmethod
     def create_user(username, password):
         if len(password) < 8:
-            raise Exception('Too short password')
+            return 'Too short password'
         if not password.isalnum():
-            raise Exception('Password must contain only letters or numbers')
+            return 'Password must contain only letters or numbers'
         if password.isalpha():
-            raise Exception('Password must contain also numbers')
+            return 'Password must contain also numbers'
         if password.isdigit():
-            raise Exception('Password must contain also letters')
+            return 'Password must contain also letters'
         DB.add_user(DB.next_user_id, username, password)
         DB.next_user_id += 1
-#        print("create user: username={}, password={}".format(username, password))
 
     @staticmethod
     def auth(username, password):
@@ -175,11 +199,9 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            print("No such user")
-            return
+            return "No such user"
         if result[0][2] != password:
-            print("Wrong password")
-            return
+            return "Wrong password"
 #        print("auth: username={}, password={}".format(username, password))
         return result[0][0]
 
@@ -195,14 +217,13 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            print("No such event")
-            return
+            return "No such event"
         return result[0][1]
 
     @staticmethod
     def update_event_status(event_id, event_status):
         if DB.get_event_admin_id(event_id) == []:
-            print("No such event")
+            return "No such event"
         statement = 'UPDATE events SET %s WHERE %s;'
         fields1 = ['state_open=\'%s\'']
         fields2 = ['event_id=\'%s\'']
@@ -223,6 +244,11 @@ class DB:
         res = c.fetchall()
         sport_id = res[0][2]
         user_id = DB.get_user_id(username)
+        sql = "SELECT * FROM ratings WHERE user_id=%s" % (user_id)
+        c = DB.query(sql)
+        res = c.fetchall()
+        if res == []:
+            DB.add_rating(user_id, sport_id, 0)
         statement = 'UPDATE ratings SET %s WHERE %s;'
         fields1 = ['points=%s', ]
         fields2 = ['sport_id=%s', 'user_id=%s']
@@ -261,18 +287,17 @@ class DB:
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            print("No such event")
-            return
+            return "No such event"
         lst = result[0]
 
         data = {
             'sport_id': lst[2],
-            'timestamp': lst[3], #распарсить вывод
+            'timestamp': lst[3],  # распарсить вывод
             'location': lst[4],
             'description': lst[5],
             'participants_number_max': lst[6],
             'status_rating': lst[7],
-            'state_open' : lst[8]
+            'state_open': lst[8]
         }
         return data
 
@@ -291,19 +316,35 @@ class DB:
         for res in result:
             lst.append(DB.get_user_name(res[0]))
         if len(lst) == 0:
-            print("No such event")
-            return
+            return "No such event"
         return lst
 
     @staticmethod
-    def create_event(admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating):
-        DB.add_event(DB.next_event_id, admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating, 'Opened')
+    def create_event(
+            admin_id,
+            sport_id,
+            timestamp,
+            location,
+            description,
+            participants_number_max,
+            status_rating):
+        DB.add_event(
+            DB.next_event_id,
+            admin_id,
+            sport_id,
+            timestamp,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            'Opened')
         DB.next_event_id += 1
         return DB.next_event_id - 1
 
     @staticmethod
     def get_list_events(sport_id):
-        sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (sport_id)
+        sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (
+            sport_id)
         c = DB.query(sql)
         result = c.fetchall()
         lst = []
@@ -313,13 +354,14 @@ class DB:
 
     @staticmethod
     def join_event(user_id, event_id):
-        if DB.get_event_admin_id(event_id) == None:
+        if DB.get_event_admin_id(event_id) is None:
             return
         DB.add_participant(user_id, event_id, 'D')
 
     @staticmethod
     def leave_event(user_id, event_id):
-        sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (user_id, event_id)
+        sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (
+            user_id, event_id)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
@@ -327,7 +369,8 @@ class DB:
 
     @staticmethod
     def get_top(sport_id, count=10):
-        sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (sport_id, count)
+        sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (
+            sport_id, count)
         c = DB.query(sql)
         result = c.fetchall()
         lst = []
@@ -338,12 +381,12 @@ class DB:
     @staticmethod
     def get_user_result(username, event_id):
         user_id = DB.get_user_id(username)
-        sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (user_id, event_id)
+        sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (
+            user_id, event_id)
         c = DB.query(sql)
         result = c.fetchall()
         if result == []:
-            print(username, end=" didn't participate this event\n")
-            return
+            return "%s didn't participate this event\n" % (username)
         return result[0][2]
 
     @staticmethod
@@ -375,21 +418,8 @@ class DB:
 
     @staticmethod
     def remove_follows(user_id, sport_id):
-        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (user_id, sport_id)
+        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (
+            user_id, sport_id)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
