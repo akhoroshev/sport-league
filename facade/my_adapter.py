@@ -17,7 +17,7 @@ class DB:
     @staticmethod
     def connect():
         DB.conn = mysql.connector.connect(**mysqlparams)
-        cursor = DB.conn.cursor()
+        DB.cursor = DB.conn.cursor()
         DB.next_user_id = 1
         DB.next_event_id = 1
 
