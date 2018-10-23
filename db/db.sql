@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS places (
 	name VARCHAR(42) NOT NULL,
 	description VARCHAR(255),
 	longitude DECIMAL(9, 6) NOT NULL,
-	latitude DECIMAL(9, 6) NOT NULL, 
+	latitude DECIMAL(8, 6) NOT NULL, 
 	UNIQUE (longitude, latitude)
 );
 
