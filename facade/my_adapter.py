@@ -131,6 +131,19 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
+    def add_place(name, description, longtitude, latitude):
+        statement = 'INSERT INTO places(%s) VALUES(%s)'
+        fields = ['name', 'description', 'longitude', 'latitude']
+        params = (name, description, longtitude, latitude)
+
+        sql = statement % (
+            ', '.join(fields),
+            ', '.join(['%s'] * len(params))
+        )
+        DB.query(sql, params)
+        DB.conn.commit()
+
+    @staticmethod
     def get_user_id(name):
         statement = 'SELECT * FROM users WHERE name=\'%s\';'
         sql = statement % name
@@ -352,7 +365,7 @@ class DB:
 
     @staticmethod
     def join_event(user_id, event_id):
-        if DB.get_event_admin_id(event_id):
+        if DB.get_event_admin_id(event_id) is None:
             return 0, 0
         DB.add_participant(user_id, event_id, None)
         return 0, 0
@@ -424,5 +437,5 @@ class DB:
         DB.conn.commit()
         return 0, 0
 
-DB.create_event(1, 1, '2008-10-23 10:37:22', 'location', 'description', 3, 5)
+DB.add_place('stadium', 'ssda', 1.4, 56.5)
 
