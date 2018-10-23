@@ -335,8 +335,46 @@ class DB:
             lst.append(DB.get_user_name(res[0]))
         return lst
 
+    @staticmethod
+    def get_user_result(username, event_id):
+        '''
+        вернуть результат username(по имени!) в event_id (только по closed?)
+        если результата нет - можно None
+        '''
+        user_id = DB.get_user_id(username)
+        sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (user_id, event_id)
+        c = DB.query(sql)
+        result = c.fetchall()
+        if result == []:
+            print(username, end=" didn't participate this event\n")
+            return
+        return result[0][2]
+
+    @staticmethod
+    def get_list_sports():
+        sql = "SELECT * FROM sports"
+        c = DB.query(sql)
+        result = c.fetchall()
+        return result
+
+    @staticmethod
+    def get_list_users(sport_id):
+        '''
+        вернуть список имен пользователей для sport_id
+        можно тех, у кого есть follow sport_id
+        или тех, кто когда-нибудь участвовал в sport_id событиях
+        '''
+        sql = "SELECT * FROM follows WHERE sport_id=%s" % (sport_id)
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(DB.get_user_name(res[0]))
+        return lst
 
 
+
+print(DB.get_list_users(1))
 
 
 
