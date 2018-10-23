@@ -4,10 +4,13 @@ from flask import Flask
 from flask.json import jsonify
 from flask import request, abort
 
+from datetime import datetime
+
 import sys
 sys.path.insert(0, '../facade')
 
-from mock_adapter import DB
+# from mock_adapter import DB
+from my_adapter import DB
 
 app = Flask(__name__)
 
@@ -54,10 +57,11 @@ def create_event(**options):
     user_id, status, error = DB.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
-
+    
+    dt = datetime.utcfromtimestamp(options['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
     event_id, status, error = DB.create_event(user_id,
                                               options['sport_id'],
-                                              options['timestamp'],
+                                              dt,
                                               options['location'],
                                               options['description'],
                                               options['participants_number_max'],
@@ -108,6 +112,9 @@ def get_event(**options):
     event_info, status, error = DB.get_event_info(options['event_id'])
     if status:
         return response_error(status, error)
+
+    dt = datetime.strptime(event_info['timestamp'], '%Y-%m-%d %H:%M:%S')
+    event_info['timestamp'] = dt.timestamp()
 
     participants, status, error = DB.get_event_participants(options['event_id'])
     if status:
@@ -297,7 +304,7 @@ def get_list_locations(**options):
     if status:
         return response_error(status, error)
 
-    data = {location_id: {'name': name, 'description': description} for (location_id, name, description) in locations}
+    data = {location_id: {'name': name, 'description': description} for (location_id, name, description, _, _) in locations}
 
     return response_ok(data)
 

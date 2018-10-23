@@ -327,7 +327,7 @@ class DB:
         for res in result:
             lst.append(DB.get_user_name(res[0]))
         if len(lst) == 0:
-            return None, 1, "No such event"
+            return None, 1, "No event participants"
         return lst, 0, 0
 
     @staticmethod
@@ -342,7 +342,7 @@ class DB:
         DB.add_event(
             admin_id,
             sport_id,
-            timestamp,
+            '2008-10-23 10:37:22',
             location,
             description,
             participants_number_max,
@@ -438,6 +438,24 @@ class DB:
         DB.conn.commit()
         return 0, 0
 
+    @staticmethod
+    def get_list_locations():
+        sql = "SELECT * FROM places"
+        c = DB.query(sql)
+        result = c.fetchall()
+        return result, 0, 0
+
+
+        @staticmethod
+        def get_user_events(username):
+            user_id = DB.get_user_id(username)
+            sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
+            c = DB.query(sql)
+            result = c.fetchall()
+            lst = []
+            for res in result:
+                lst.append(res[1])
+            return lst, 0, None
+
 DB.connect()
-DB.add_place('tadium', 'ssda', 10, 60)
 
