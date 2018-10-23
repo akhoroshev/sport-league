@@ -446,16 +446,16 @@ class DB:
         return result, 0, 0
 
 
-        @staticmethod
-        def get_user_events(username):
-            user_id = DB.get_user_id(username)
-            sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
-            c = DB.query(sql)
-            result = c.fetchall()
-            lst = []
-            for res in result:
-                lst.append(res[1])
-            return lst, 0, None
+    @staticmethod
+    def get_user_events(username):
+        user_id = DB.get_user_id(username)
+        sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(res[1])
+        return lst, 0, None
 
 DB.connect()
 
