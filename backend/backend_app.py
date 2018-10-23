@@ -4,6 +4,11 @@ from flask import Flask
 from flask.json import jsonify
 from flask import request, abort
 
+import sys
+sys.path.insert(0, '../facade')
+
+from mock_adapter import DB
+
 app = Flask(__name__)
 
 def request_json_fields(*keys):
@@ -22,19 +27,252 @@ def request_json_fields(*keys):
     return wrapper
 
 
-@app.route('/test', methods=['POST'])
-@request_json_fields('address_from', 'address_to')
-def test(**options):
-    print("address_from: {}".format(options['address_from']))
-    print("address_to: {}".format(options['address_to']))
+def response_error(status, error):
+    return jsonify({'status': status, 'error': error})
 
-    users = ["ivan", "oleg", "semen"]
-    marks = [3, 2, 3] 
 
-    data = {k:v for (k, v) in zip(users, marks)}
+def response_ok(data={}):
+    return jsonify({'status': 0, 'data': data})
 
-    return jsonify(data)
-    # return jsonify({'data': [1, 2, 3]})
+
+@app.route('/register', methods=['POST'])
+@request_json_fields('username', 'password')
+def register(**options):
+    status, error = DB.create_user(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
+
+
+@app.route('/event/create', methods=['POST'])
+@request_json_fields('username', 'password', 'sport_id', 'timestamp', 'location', 'description', 'participants_number_max', 'status_rating')
+def create_event(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+    
+    event_id, status, error = DB.create_event(user_id, options['sport_id'],
+            options['timestamp'], options['location'], options['description'], options['participants_number_max'], options['status_rating'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_id': event_id})
+
+
+@app.route('/event/close', methods=['POST'])
+@request_json_fields('username', 'password', 'event_id', 'event_status', 'results')
+def close_event(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+    
+    admin_id, status, error = DB.get_event_admin_id(options['event_id'])
+    if status:
+        return response_error(status, error)
+    
+    if admin_id != user_id:
+        return response_error(1, 'you are not event admin')
+
+    status, error = DB.update_event_status(options['event_id'], options['event_status'])
+    if status:
+        return response_error(status, error)
+
+    for username, result in options['results'].items():
+        status, errot = DB.set_result(options['event_id'], username, result)
+        if status:
+            return response_error(status, error)
+
+    return response_ok()
+
+
+@app.route('/event/get', methods=['POST'])
+@request_json_fields('event_id')
+def get_event(**options):
+    event_info, status, error = DB.get_event_info(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    participants, status, error = DB.get_event_participants(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_info': event_info, 'participants': participants})
+
+
+@app.route('/event/list', methods=['POST'])
+@request_json_fields('sport_id')
+def get_list_events(**options):
+    events, status, error = DB.get_list_events(options['sport_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_ids': events})
+
+
+@app.route('/event/join', methods=['POST'])
+@request_json_fields('username', 'password', 'event_id')
+def join_event(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+
+    participants, status, error = DB.get_event_participants(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    event_info, status, error = DB.get_event_info(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    if options['username'] in participants:
+        return response_error(1, 'you are already registered')
+
+    if len(participants) == event_info['participants_number_max']:
+        return response_error(1, 'event is full')
+
+    status, error = DB.join_event(user_id, options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
+
+
+@app.route('/event/leave', methods=['POST'])
+@request_json_fields('username', 'password', 'event_id')
+def leave_event(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+    
+    participants, status, error = DB.get_event_participants(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    admin_id, status, error = DB.get_event_admin_id(options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    if user_id == admin_id:
+        return response_error(1, 'admin cant leave event, you should close it')
+
+    if options['username'] not in participants:
+        return response_error(1, 'you are not in participants list')
+
+    status, error = DB.leave_event(user_id, options['event_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
+
+
+@app.route('/rating/global', methods=['POST'])
+@request_json_fields('sport_id')
+def get_global_rating(**options):
+    top, status, error = DB.get_top(options['sport_id'], 5)
+    if status:
+        return response_error(status, error)
+
+    data = {user: points for (user, points) in top}
+
+    return response_ok(data)
+
+
+@app.route('/rating/local', methods=['POST'])
+@request_json_fields('sport_id', 'usernames')
+def get_local_rating(**options):
+    events, status, error = DB.get_list_events(options['sport_id'])
+    if status:
+        return response_error(status, error)
+
+    local_events = []
+
+    for event in events:
+        participants, status, error = DB.get_event_participants(event)
+        if status:
+            return response_error(status, error)
+
+        if all(elem in options['usernames'] for elem in participants):
+            local_events.append(event)
+
+    result = {username: 0 for username in options['usernames']}
+
+    for event in local_events:
+        for username in options['usernames']:
+            res, status, error = DB.get_user_result(username, event)
+            if status:
+                return response_error(status, error)
+
+            if res == 'W':
+                result[username] += 2
+
+            if res == 'D':
+                result[username] += 1
+
+    return response_ok(result)
+
+
+@app.route('/sport/list', methods=['POST'])
+def get_list_sports(**options):
+    sports, status, error = DB.get_list_sports()
+    if status:
+        return response_error(status, error)
+
+    data = {sport_id: {'name': name, 'description': description} for (sport_id, name, description) in sports}
+
+    return response_ok(data)
+
+
+@app.route('/user/list', methods=['POST'])
+@request_json_fields('sport_id')
+def get_list_users(**options):
+    users, status, error = DB.get_list_users(options['sport_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'usernames': users})
+
+
+@app.route('/follow/list', methods=['POST'])
+@request_json_fields('username', 'password')
+def get_list_follows(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+    
+    events, status, error = DB.get_list_follows(user_id)
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_ids': events})
+
+
+@app.route('/follow/add', methods=['POST'])
+@request_json_fields('username', 'password', 'sport_id', 'location')
+def add_follow(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+
+    status, error = DB.add_follow(user_id, options['sport_id'], options['location'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
+
+
+@app.route('/follow/remove', methods=['POST'])
+@request_json_fields('username', 'password', 'sport_id')
+def remove_follow(**options):
+    user_id, status, error = DB.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+    
+    status, error = DB.remove_follows(user_id, options['sport_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
 
 
 if __name__ == '__main__':

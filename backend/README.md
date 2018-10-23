@@ -10,129 +10,160 @@ Environment setup:
 
 REST API description here
 
-    register:
+1. common result format:
+
+    result: {
+                status: 0
+                data: ...
+            }
+
+or
+
+  result: {
+              status: 1
+              error: "error description"
+          }
+
+2. data format:
+
+    /register:
         params: {   
                     username: ...
                     password: ...
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
-    create event:
+    /event/create:
         params: {
+                    username: ...
+                    password: ...
                     sport_id: ...
                     timestamp: ...
                     location: ...
                     description: ...
-                    players: ...
+                    size: ...
                 }
-        result: {   
+        data:   {   
                     event_id: ...
-                    status_code: ... 
                 }
 
-    close event:
+    /event/close:
         params: {
+                    username: ...
+                    password: ...
                     event_id: ...
-                    status_code: ... ("CANCEL", "COMPLETE")
+                    event_status: ... ("CANCEL", "COMPLETE")
+                    results: {
+                        username1: result1,
+                        username2: result2
+                    }
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
-    get event:
+    /event/get:
         params: {
                     event_id: ...
                 }
-        result: {
+        data:   {
+                    event_info: {
+                        sport_id: ...
+                        timestamp: ...
+                        location: ...
+                        description: ...
+                        size: ...
+                    }
+
+                    participants: [...]
+                }
+
+    /event/list:
+        params: {
                     sport_id: ...
-                    timestamp: ...
-                    location: ...
-                    description: ...
-                    players: ...
-                    usernames: [...]
                 }
-
-    list events:
-        params: None
-        result: {
+        data:   {
                     event_ids: [...]
                 }
 
-    join event:
+    /event/join:
         params: {
+                    username: ...
+                    password: ...
                     event_id: ...
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
-    leave event:
+    /event/leave:
         params: {
+                    username: ...
+                    password: ...
                     event_id: ...
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
-    global rating:
+    /rating/global:
         params: {
                     sport_id: ...
                 }
-        result: {
+        data:   {
                     usernameI: ratingI
                     ...
                 }
 
-    local rating:
+    /rating/local:
         params: {
                     sport_id: ...
                     usernames: [...]
                 }
-        result: {
+        data:   {
                     usernameI: ratingI
                     ...
                 }
 
-    list sports:
+    /sport/list:
         params: None
-        result: {
+        data:   {
                     sport_idI:  {
                                     name: ...
                                     description: ...
                                 }
                 }
 
-    list sportsmen:
+    /user/list:
         params: {
                     sport_id: ...
                 }
-        result: {
+        data:   {
                     usernames: [...]
                 }
 
-    list followed events:
+    /follow/list:
         params: None
-        result: {
+        data:   {
                     event_ids: [...]
                 }
 
-    follow event:
+    /follow/add:
         params: {
                     sport_id: ...
                     location: ...
-                    radius: ...
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
-    unfollow event:
+    /follow/remove:
         params: {
                     sport_id: ...
                 }
-        result: {
-                    status_code: ...
+        data:   {
+
                 }
 
