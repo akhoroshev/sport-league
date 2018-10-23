@@ -4,7 +4,7 @@ import requests
 
 
 def test_request(url, data):
-    res = requests.post('http://127.0.0.1:5000' + url, json=data)
+    res = requests.post('http://192.168.43.209:5000' + url, json=data)
 
     if res.ok:
         print(res.json())
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     test_request('/event/close', {'username': 'niikkio',
                                   'password': 'qwerty123',
                                   'event_id': 12,
-                                  'event_status': 'Canceled',
+                                  'event_status': 'Closed',
                                   'results':    {
                                                     'fish': 'W',
                                                     'bird': 'L',
@@ -62,3 +62,5 @@ if __name__ == '__main__':
     test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty123', 'sport_id': 12})
 
     test_request('/location/list', {})
+
+    test_request('/event/user', {'username': 'anna'})

@@ -170,3 +170,12 @@ class DB:
         print("get locations list")
         data = [(2, 'корт', 'корт на удельной'), (6, '203', 'учебная комната Таймс')]
         return data, 0, None
+
+    @staticmethod
+    def get_user_events(username):
+        '''
+        вернуть event_ids, в которых username - участник
+        '''
+        print('get username={} events'.format(username))
+        data = [2,3,4,91,122]
+        return data, 0, None

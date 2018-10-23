@@ -82,10 +82,6 @@ def close_event(**options):
     if admin_id != user_id:
         return response_error(1, 'you are not event admin')
 
-    status, error = DB.update_event_status(options['event_id'], options['event_status'])
-    if status:
-        return response_error(status, error)
-
     participants, status, error = DB.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
@@ -98,6 +94,10 @@ def close_event(**options):
         status, errot = DB.set_result(options['event_id'], username, result, points)
         if status:
             return response_error(status, error)
+
+    status, error = DB.update_event_status(options['event_id'], options['event_status'])
+    if status:
+        return response_error(status, error)
 
     return response_ok()
 
@@ -302,5 +302,15 @@ def get_list_locations(**options):
     return response_ok(data)
 
 
+@app.route('/event/user', methods=['POST'])
+@request_json_fields('username')
+def get_user_events(**options):
+    events, status, error = DB.get_user_events(options['username'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_ids': events})
+
+
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=False)
