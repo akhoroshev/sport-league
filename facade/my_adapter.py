@@ -1,18 +1,24 @@
 import mysql.connector
 
 mysqlparams = {
-        'user': 'root',
-        'password': 'testmysql',
-        'host': 'localhost',
-        'database': 'testdb2',
-        }
+    'user': 'root',
+    'password': '',
+    'host': 'localhost',
+    'database': 'staff'
+    }
 
 class DB:
     conn = None
+    cursor = None
+    next_user_id = 0
+    next_event_id = 0
 
     @staticmethod
     def connect():
-        DB.conn = mysql.connector.connect(**mysqlparams) #connection with database
+        DB.conn = mysql.connector.connect(**mysqlparams)
+        cursor = DB.conn.cursor()
+        DB.next_user_id = 1
+        DB.next_event_id = 1
 
     @staticmethod
     def query(sql, params=tuple()):
@@ -107,7 +113,6 @@ class DB:
     def get_user_id(name):
         statement = 'SELECT * FROM users WHERE name=\'%s\';'
         sql = statement % name
-        print(sql)
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
@@ -118,10 +123,225 @@ class DB:
     def get_user_name(user_id):
         statement = 'SELECT * FROM users WHERE user_id=\'%s\';'
         sql = statement % user_id
-        print(sql)
         c = DB.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             raise Exception('No such user in database')
         return result[0][1]
+
+    @staticmethod
+    def get_sport_id(name):
+        statement = 'SELECT * FROM sports WHERE name=\'%s\';'
+        sql = statement % name
+        c = DB.query(sql)
+        result = c.fetchall()
+        if len(result) == 0:
+            raise Exception('No such sport in database')
+        return result[0][0]
+
+    @staticmethod
+    def get_sport_name(sport_id):
+        statement = 'SELECT * FROM sports WHERE sport_id=\'%s\';'
+        sql = statement % sport_id
+        c = DB.query(sql)
+        result = c.fetchall()
+        if len(result) == 0:
+            raise Exception('No such user in database')
+        return result[0][1]
+
+    @staticmethod
+    def create_user(username, password):
+        if len(password) < 8:
+            raise Exception('Too short password')
+        if not password.isalnum():
+            raise Exception('Password must contain only letters or numbers')
+        if password.isalpha():
+            raise Exception('Password must contain also numbers')
+        if password.isdigit():
+            raise Exception('Password must contain also letters')
+        DB.add_user(DB.next_user_id, username, password)
+        DB.next_user_id += 1
+#        print("create user: username={}, password={}".format(username, password))
+
+    @staticmethod
+    def auth(username, password):
+        statement = 'SELECT * FROM users WHERE %s;'
+        fields = ['name=\'%s\'']
+        params = (username)
+        sql = statement % (
+            ', '.join(fields)
+        )
+        sql = sql % params
+        c = DB.query(sql)
+        result = c.fetchall()
+        if len(result) == 0:
+            print("No such user")
+            return
+        if result[0][2] != password:
+            print("Wrong password")
+            return
+#        print("auth: username={}, password={}".format(username, password))
+        return result[0][0]
+
+    @staticmethod
+    def get_event_admin_id(event_id):
+        statement = 'SELECT * FROM events WHERE %s;'
+        fields = ['event_id=\'%s\'']
+        params = (event_id)
+        sql = statement % (
+            ', '.join(fields)
+        )
+        sql = sql % params
+        c = DB.query(sql)
+        result = c.fetchall()
+#        print("get event_id={} admin".format(event_id))
+        if len(result) == 0:
+            print("No such event")
+            return
+        return result[0][1]
+
+    @staticmethod
+    def update_event_status(event_id, event_status):
+        if DB.get_event_admin_id(event_id) == []:
+            print("No such event")
+        statement = 'UPDATE events SET %s WHERE %s;'
+        fields1 = ['state_open=\'%s\'']
+        fields2 = ['event_id=\'%s\'']
+        params = (event_status, event_id)
+        sql = statement % (
+            ', '.join(fields1),
+            ', '.join(fields2)
+        )
+        sql = sql % params
+        cursor = DB.conn.cursor(buffered=True)
+        cursor.execute(sql)
+        DB.conn.commit()
+#        print("set event_id={} status={}".format(event_id, event_status))
+
+    @staticmethod
+    def set_result(sport_id, username, result):
+        user_id = DB.get_user_id(username)
+        statement = 'UPDATE ratings SET %s WHERE %s;'
+        fields1 = ['points=\'%s\'', ]
+        fields2 = ['sport_id=\'%s\'', 'user_id=\'%s\'']
+        params = (result, sport_id, user_id)
+        sql = statement % (
+            ', '.join(fields1),
+            ' AND '.join(fields2)
+        )
+        sql = sql % params
+        print(sql)
+        cursor = DB.conn.cursor(buffered=True)
+        cursor.execute(sql)
+        DB.conn.commit()
+        '''
+        обновить результат для username в event_id
+        должны обновляться обе таблицы - participants и ratings
+        '''
+#        print("set result={} for username={} in event_id={}".format(result, username, event_id))
+        return 0, None
+
+    @staticmethod
+    def get_event_info(event_id):
+        '''
+        вернуть подробную информацию для event_id (без списка участников!)
+        '''
+        statement = 'SELECT * FROM events WHERE %s;'
+        fields = ['event_id=\'%s\'']
+        params = (event_id)
+        sql = statement % (
+            ', '.join(fields)
+        )
+        sql = sql % params
+        c = DB.query(sql)
+        result = c.fetchall()
+        if len(result) == 0:
+            print("No such event")
+            return
+        lst = result[0]
+
+        data = {
+            'sport_id': lst[2],
+            'timestamp': lst[3], #распарсить вывод
+            'location': lst[4],
+            'description': lst[5],
+            'participants_number_max': lst[6],
+            'status_rating': lst[7],
+            'state_open' : lst[8]
+        }
+        return data
+
+    @staticmethod
+    def get_event_participants(event_id):
+        statement = 'SELECT * FROM participants WHERE %s;'
+        fields = ['event_id=\'%s\'']
+        params = (event_id)
+        sql = statement % (
+            ', '.join(fields)
+        )
+        sql = sql % params
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(DB.get_user_name(res[0]))
+        if len(lst) == 0:
+            print("No such event")
+            return
+        return lst
+
+    @staticmethod
+    def create_event(admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating):
+        DB.add_event(DB.next_event_id, admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating, 'Opened')
+        DB.next_event_id += 1
+        return DB.next_event_id - 1
+
+    @staticmethod
+    def get_list_events(sport_id):
+        sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (sport_id)
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(res[0])
+        return lst
+
+    @staticmethod
+    def join_event(user_id, event_id):
+        if DB.get_event_admin_id(event_id) == None:
+            return
+        DB.add_participant(user_id, event_id, 'D')
+
+    @staticmethod
+    def leave_event(user_id, event_id):
+        '''
+        user_id покидает event_id
+        проверки на админа/отсутствие в списке сделал у себя
+        '''
+        sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (user_id, event_id)
+        print(sql)
+        cursor = DB.conn.cursor(buffered=True)
+        cursor.execute(sql)
+        DB.conn.commit()
+        return 0, None
+
+    @staticmethod
+    def get_top(sport_id, count=10):
+        sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (sport_id, count)
+        c = DB.query(sql)
+        result = c.fetchall()
+        lst = []
+        for res in result:
+            lst.append(DB.get_user_name(res[0]))
+        return lst
+
+
+
+
+
+
+
+
+
+
 
