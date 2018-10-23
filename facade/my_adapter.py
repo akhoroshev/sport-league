@@ -184,7 +184,7 @@ class DB:
             return 'Password must contain also numbers'
         if password.isdigit():
             return 'Password must contain also letters'
-        DB.add_user(DB.next_user_id, username, password)
+        DB.add_user(username, password)
         DB.next_user_id += 1
 
     @staticmethod
