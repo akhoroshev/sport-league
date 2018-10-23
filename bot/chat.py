@@ -264,10 +264,11 @@ def get_your_event_list(id):
         {},
         get_auth(id)
     )
-    return get_event_detail(event_ids['event_ids'])
+    return get_event_detail(event_ids['event_ids'], id)
 
 
 def get_event_list(id):
+    print(get_auth(id))
     event_ids = util.post(
         '/event/list',
         {
@@ -275,10 +276,10 @@ def get_event_list(id):
         },
         get_auth(id)
     )
-    return get_event_detail(event_ids['event_ids'])
+    return get_event_detail(event_ids['event_ids'], id)
 
 
-def get_event_detail(events_id):
+def get_event_detail(events_id, tg_id):
     result = dict()
     for event_id in events_id:
         result[event_id] = {}
@@ -287,7 +288,7 @@ def get_event_detail(events_id):
             {
                 'event_id': event_id
             },
-            get_auth(id))
+            get_auth(tg_id))
         result[event_id]['Вид спорта'] = util.id_to_sport(str(data['event_info']['sport_id']))
         result[event_id]['Время'] = util.timestamp_to_human(data['event_info']['timestamp'])
         result[event_id]['Локация'] = util.id_to_location(str(data['event_info']['location']))
