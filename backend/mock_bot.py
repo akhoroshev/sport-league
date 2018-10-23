@@ -33,7 +33,7 @@ if __name__ == '__main__':
                                   'event_status': 'Canceled',
                                   'results':    {
                                                     'fish': 'W',
-                                                    'bird': 'L'
+                                                    'bird': 'L',
                                                 }
                                   })
 
@@ -62,3 +62,4 @@ if __name__ == '__main__':
 
     test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty123', 'sport_id': 12})
 
+    test_request('/location/list', {})

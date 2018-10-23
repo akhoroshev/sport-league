@@ -38,15 +38,13 @@ class DB:
         print("set event_id={} status={}".format(event_id, event_status))
         return 0, None
 
-    # следующий метод - костыльный
-    # мы забыли обсудить внесение результатов
     @staticmethod
-    def set_result(event_id, username, result):
+    def set_result(event_id, username, result, points):
         '''
         обновить результат для username в event_id
         должны обновляться обе таблицы - participants и ratings
         '''
-        print("set result={} for username={} in event_id={}".format(result, username, event_id))
+        print("set result={} (points={}) for username={} in event_id={}".format(result, points, username, event_id))
         return 0, None
 
     @staticmethod
@@ -163,3 +161,12 @@ class DB:
     def remove_follows(user_id, sport_id):
         print("remove follows for user_id={}: sport_id={}".format(user_id, sport_id))
         return 0, None
+
+    @staticmethod
+    def get_list_locations():
+        '''
+        вернуть данные из таблицы places
+        '''
+        print("get locations list")
+        data = [(2, 'корт', 'корт на удельной'), (6, '203', 'учебная комната Таймс')]
+        return data, 0, None

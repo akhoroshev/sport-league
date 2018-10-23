@@ -79,7 +79,8 @@ def close_event(**options):
         return response_error(status, error)
 
     for username, result in options['results'].items():
-        status, errot = DB.set_result(options['event_id'], username, result)
+        points = 2 if result == 'W' else 1 if result == 'D' else 0
+        status, errot = DB.set_result(options['event_id'], username, result, points)
         if status:
             return response_error(status, error)
 
@@ -273,6 +274,17 @@ def remove_follow(**options):
         return response_error(status, error)
 
     return response_ok()
+
+
+@app.route('/location/list', methods=['POST'])
+def get_list_locations(**options):
+    locations, status, error = DB.get_list_locations()
+    if status:
+        return response_error(status, error)
+
+    data = {location_id: {'name': name, 'description': description} for (location_id, name, description) in locations}
+
+    return response_ok(data)
 
 
 if __name__ == '__main__':
