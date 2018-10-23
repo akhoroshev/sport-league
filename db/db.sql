@@ -10,18 +10,28 @@ CREATE TABLE IF NOT EXISTS sports (
 	description VARCHAR(255)
 );
 
+CREATE TABLE IF NOT EXISTS places (
+	place_id SERIAL PRIMARY KEY,
+	name VARCHAR(42) NOT NULL,
+	description VARCHAR(255),
+	longitude DECIMAL(9, 6) NOT NULL,
+	latitude DECIMAL(9, 6) NOT NULL, 
+	UNIQUE (longitude, latitude)
+);
+
 CREATE TABLE IF NOT EXISTS events (
 	event_id SERIAL PRIMARY KEY,
 	admin_id BIGINT UNSIGNED NOT NULL,
 	sport_id BIGINT UNSIGNED NOT NULL,
 	event_date TIMESTAMP,
-	location VARCHAR(30),
+	location BIGINT UNSIGNED,
 	description VARCHAR(255),
 	participants_number_max INTEGER CHECK (participants_number_max > 1),
 	status_rating BOOL NOT NULL,
 	state_open ENUM('Opened', 'Closed', 'Canceled') NOT NULL,
 	FOREIGN KEY(admin_id) REFERENCES users(user_id),
-	FOREIGN KEY(sport_id) REFERENCES sports(sport_id)
+	FOREIGN KEY(sport_id) REFERENCES sports(sport_id),
+	FOREIGN KEY(location) REFERENCES places(place_id)
 );
 
 CREATE TABLE IF NOT EXISTS participants (
@@ -45,8 +55,8 @@ CREATE TABLE IF NOT EXISTS ratings (
 CREATE TABLE IF NOT EXISTS follows (
 	user_id BIGINT UNSIGNED NOT NULL,
 	sport_id BIGINT UNSIGNED NOT NULL,
-	location VARCHAR(30) NOT NULL,
-	radius INTEGER NOT NULL CHECK (radius > 0),
+	location BIGINT UNSIGNED NOT NULL,
 	FOREIGN KEY(user_id) REFERENCES users(user_id),
-	FOREIGN KEY(sport_id) REFERENCES sports(sport_id)
+	FOREIGN KEY(sport_id) REFERENCES sports(sport_id),
+	FOREIGN KEY(location) REFERENCES places(place_id)
 );
