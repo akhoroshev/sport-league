@@ -5,7 +5,8 @@ mysqlparams = {
     'password': '',
     'host': 'localhost',
     'database': 'staff'
-    }
+}
+
 
 class DB:
     conn = None
@@ -58,10 +59,34 @@ class DB:
         DB.conn.commit()
 
     @staticmethod
-    def add_event(admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open):
+    def add_event(
+            admin_id,
+            sport_id,
+            event_date,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            state_open):
         statement = 'INSERT INTO events(%s) VALUES(%s)'
-        fields = ['admin_id', 'sport_id', 'event_date', 'location', 'description', 'participants_number_max', 'status_rating', 'state_open']
-        params = (admin_id, sport_id, event_date, location, description, participants_number_max, status_rating, state_open)
+        fields = [
+            'admin_id',
+            'sport_id',
+            'event_date',
+            'location',
+            'description',
+            'participants_number_max',
+            'status_rating',
+            'state_open']
+        params = (
+            admin_id,
+            sport_id,
+            event_date,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            state_open)
 
         sql = statement % (
             ', '.join(fields),
@@ -267,12 +292,12 @@ class DB:
 
         data = {
             'sport_id': lst[2],
-            'timestamp': lst[3], #распарсить вывод
+            'timestamp': lst[3],  # распарсить вывод
             'location': lst[4],
             'description': lst[5],
             'participants_number_max': lst[6],
             'status_rating': lst[7],
-            'state_open' : lst[8]
+            'state_open': lst[8]
         }
         return data
 
@@ -296,14 +321,31 @@ class DB:
         return lst
 
     @staticmethod
-    def create_event(admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating):
-        DB.add_event(DB.next_event_id, admin_id, sport_id, timestamp, location, description, participants_number_max, status_rating, 'Opened')
+    def create_event(
+            admin_id,
+            sport_id,
+            timestamp,
+            location,
+            description,
+            participants_number_max,
+            status_rating):
+        DB.add_event(
+            DB.next_event_id,
+            admin_id,
+            sport_id,
+            timestamp,
+            location,
+            description,
+            participants_number_max,
+            status_rating,
+            'Opened')
         DB.next_event_id += 1
         return DB.next_event_id - 1
 
     @staticmethod
     def get_list_events(sport_id):
-        sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (sport_id)
+        sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (
+            sport_id)
         c = DB.query(sql)
         result = c.fetchall()
         lst = []
@@ -313,13 +355,14 @@ class DB:
 
     @staticmethod
     def join_event(user_id, event_id):
-        if DB.get_event_admin_id(event_id) == None:
+        if DB.get_event_admin_id(event_id) is None:
             return
         DB.add_participant(user_id, event_id, 'D')
 
     @staticmethod
     def leave_event(user_id, event_id):
-        sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (user_id, event_id)
+        sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (
+            user_id, event_id)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
@@ -327,7 +370,8 @@ class DB:
 
     @staticmethod
     def get_top(sport_id, count=10):
-        sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (sport_id, count)
+        sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (
+            sport_id, count)
         c = DB.query(sql)
         result = c.fetchall()
         lst = []
@@ -338,7 +382,8 @@ class DB:
     @staticmethod
     def get_user_result(username, event_id):
         user_id = DB.get_user_id(username)
-        sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (user_id, event_id)
+        sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (
+            user_id, event_id)
         c = DB.query(sql)
         result = c.fetchall()
         if result == []:
@@ -375,21 +420,8 @@ class DB:
 
     @staticmethod
     def remove_follows(user_id, sport_id):
-        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (user_id, sport_id)
+        sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (
+            user_id, sport_id)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
