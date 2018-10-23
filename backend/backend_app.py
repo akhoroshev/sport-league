@@ -302,5 +302,15 @@ def get_list_locations(**options):
     return response_ok(data)
 
 
+@app.route('/event/user', methods=['POST'])
+@request_json_fields('username')
+def get_user_events(**options):
+    events, status, error = DB.get_user_events(options['username'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_ids': events})
+
+
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=False)
