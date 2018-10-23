@@ -6,6 +6,7 @@ Environment setup:
     pip install Flask
     pip install requests
     pip install pylint
+    pip install mysqlpy
     
 
 REST API description here
