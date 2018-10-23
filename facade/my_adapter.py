@@ -352,7 +352,7 @@ class DB:
 
     @staticmethod
     def join_event(user_id, event_id):
-        if DB.get_event_admin_id(event_id) is None:
+        if DB.get_event_admin_id(event_id):
             return 0, 0
         DB.add_participant(user_id, event_id, None)
         return 0, 0
