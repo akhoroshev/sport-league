@@ -221,10 +221,10 @@ class DB:
         sql = "SELECT * FROM events WHERE event_id=%s" % (event_id)
         c = DB.query(sql)
         res = c.fetchall()
-        sport_id = res[0][3]
+        sport_id = res[0][2]
         user_id = DB.get_user_id(username)
         statement = 'UPDATE ratings SET %s WHERE %s;'
-        fields1 = ['points=\'%s\'', ]
+        fields1 = ['points=%s', ]
         fields2 = ['sport_id=%s', 'user_id=%s']
         params = (points, sport_id, user_id)
         sql = statement % (
@@ -232,36 +232,25 @@ class DB:
             ' AND '.join(fields2)
         )
         sql = sql % params
-        print(sql)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
         statement = 'UPDATE participants SET %s WHERE %s;'
         fields1 = ['result=\'%s\'', ]
-        fields2 = ['user_id=\'%s\'', 'event_id=\'%s\'']
-        params = (result, user_id, user_id)
+        fields2 = ['user_id=%s', 'event_id=%s']
+        params = (result, user_id, event_id)
         sql = statement % (
             ', '.join(fields1),
             ' AND '.join(fields2)
         )
         sql = sql % params
-        print(sql)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
-
-        '''
-        обновить результат для username в event_id
-        должны обновляться обе таблицы - participants и ratings
-        '''
-#        print("set result={} for username={} in event_id={}".format(result, username, event_id))
-        return 0, None
+        return
 
     @staticmethod
     def get_event_info(event_id):
-        '''
-        вернуть подробную информацию для event_id (без списка участников!)
-        '''
         statement = 'SELECT * FROM events WHERE %s;'
         fields = ['event_id=\'%s\'']
         params = (event_id)
@@ -330,12 +319,7 @@ class DB:
 
     @staticmethod
     def leave_event(user_id, event_id):
-        '''
-        user_id покидает event_id
-        проверки на админа/отсутствие в списке сделал у себя
-        '''
         sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (user_id, event_id)
-        print(sql)
         cursor = DB.conn.cursor(buffered=True)
         cursor.execute(sql)
         DB.conn.commit()
@@ -353,10 +337,6 @@ class DB:
 
     @staticmethod
     def get_user_result(username, event_id):
-        '''
-        вернуть результат username(по имени!) в event_id (только по closed?)
-        если результата нет - можно None
-        '''
         user_id = DB.get_user_id(username)
         sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (user_id, event_id)
         c = DB.query(sql)
@@ -375,11 +355,6 @@ class DB:
 
     @staticmethod
     def get_list_users(sport_id):
-        '''
-        вернуть список имен пользователей для sport_id
-        можно тех, у кого есть follow sport_id
-        или тех, кто когда-нибудь участвовал в sport_id событиях
-        '''
         sql = "SELECT * FROM follows WHERE sport_id=%s" % (sport_id)
         c = DB.query(sql)
         result = c.fetchall()
@@ -406,9 +381,6 @@ class DB:
         DB.conn.commit()
 
 
-db = DB()
-db.connect()
-db.set_result(3, 'Vasya', 'W', 20)
 
 
 
