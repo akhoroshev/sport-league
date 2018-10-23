@@ -303,7 +303,7 @@ class DB:
 
         data = {
             'sport_id': lst[2],
-            'timestamp': lst[3],  # распарсить вывод
+            'timestamp': str(lst[3]),
             'location': lst[4],
             'description': lst[5],
             'participants_number_max': lst[6],
