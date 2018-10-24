@@ -328,9 +328,9 @@ def get_list_locations(**options):
     locations, status, error = DB().get_list_locations()
     if status:
         return response_error(status, error)
-
-    data = {location_id: {'name': name, 'description': description} for (location_id, name, description, _, _) in locations}
-
+    data = {location_id: {'name': name, 'description': description,
+                          'longitude': str(longitude), 'latitude': str(latitude)}
+            for (location_id, name, description, longitude, latitude) in locations}
     return response_ok(data)
 
 
