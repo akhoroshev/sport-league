@@ -199,7 +199,10 @@ def process_creating_event(bot, update):
         set_user_state(id, 'event_amount_of_players')
     elif current_state is 'event_amount_of_players':
         try:
-            set_user_answer(id, 'event_amount_of_players', int(update.message.text))
+            amount = int(update.message.text)
+            if amount < 1:
+                raise ValueError('Число участников < 1')
+            set_user_answer(id, 'event_amount_of_players', amount)
             update.message.reply_text('Это рейтинговое событие?', reply_markup=chose_ranked())
             set_user_state(id, 'event_ranked')
         except ValueError:
