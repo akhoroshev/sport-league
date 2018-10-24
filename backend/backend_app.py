@@ -286,11 +286,11 @@ def get_list_follows(**options):
     if status:
         return response_error(status, error)
 
-    events, status, error = db.get_list_follows(user_id)
+    follows, status, error = db.get_list_follows(user_id)
     if status:
         return response_error(status, error)
 
-    return response_ok({'event_ids': events})
+    return response_ok({'follow_ids': follows})
 
 
 @app.route('/follow/add', methods=['POST'])
