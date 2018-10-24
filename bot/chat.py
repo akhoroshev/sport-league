@@ -288,7 +288,8 @@ def process_creating_follow(bot, update):
             update.message.reply_text(str(e))
             return
         # TODO
-        send_notifications(bot, [update.message.chat_id], event_ids, 'Доступны новые события❗️')
+        if event_ids:
+            send_notifications(bot, [update.message.chat_id], event_ids, 'Доступны новые события❗️')
 
 
 def process_list_events(bot, update):
