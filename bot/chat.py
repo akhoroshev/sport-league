@@ -149,6 +149,21 @@ def request_for_creating_event(bot, update, *args, **kwargs):
 
 
 @check_registration
+def request_for_creating_follow(bot, update, *args, **kwargs):
+    # TODO
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Выбери вид спорта из предложенных ⚽️🏀🏓',
+                     reply_markup=chose_sport())
+    set_user_state(update.message.chat_id, 'follow_sport')
+
+
+@check_registration
+def request_for_list_your_follow(bot, update, *args, **kwargs):
+    # TODO
+    generate_follow_buttons(bot, update, get_your_follow_list(update.message.chat_id))
+
+
+@check_registration
 def request_for_list_your_events(bot, update, *args, **kwargs):
     generate_event_buttons(bot, update, get_your_event_list(update.message.chat_id))
 
@@ -229,6 +244,32 @@ def process_creating_event(bot, update):
             update.message.reply_text(str(e))
 
 
+def process_creating_follow(bot, update):
+    id = update.message.chat_id
+    current_state = get_user_state(id)
+    if current_state is None:
+        return
+    elif current_state is 'follow_sport':
+        try:
+            set_user_answer(id, 'follow_sport', util.parse_sport_id(update.message.text))
+            update.message.reply_text('Выбери локацию🗺', reply_markup=chose_location())
+            set_user_state(id, 'follow_location')
+        except ValueError as e:
+            update.message.reply_text(str(e))
+    elif current_state is 'follow_location':
+        try:
+            set_user_answer(id, 'follow_location', util.parse_location_id(update.message.text))
+            update.message.reply_text('Подписываем на обновления...', reply_markup=ReplyKeyboardRemove())
+            set_user_state(id, None)
+        except ValueError as e:
+            update.message.reply_text(str(e))
+        try:
+            follow_create(id)
+            update.message.reply_text('Вы подписаны')
+        except Exception as e:
+            update.message.reply_text(str(e))
+
+
 def process_list_events(bot, update):
     id = update.message.chat_id
     current_state = get_user_state(id)
@@ -251,6 +292,23 @@ def process_list_events(bot, update):
 def input(bot, update):
     process_creating_event(bot, update)
     process_list_events(bot, update)
+    process_creating_follow(bot, update)
+
+
+def follow_create(id):
+    # TODO
+    print({
+            'sport_id': get_user_answer(id, 'follow_sport'),
+            'location': get_user_answer(id, 'follow_location')
+        })
+    util.post(
+        '/follow/add',
+        {
+            'sport_id': get_user_answer(id, 'follow_sport'),
+            'location': get_user_answer(id, 'follow_location')
+        },
+        get_auth(id)
+    )
 
 
 def event_create(id):
@@ -266,6 +324,15 @@ def event_create(id):
           },
           get_auth(id)
     )
+
+
+def get_your_follow_list(id):
+    follows_ids = util.post(
+        '/follow/list',
+        {},
+        get_auth(id)
+    )
+    return get_follow_detail(follows_ids['follow_ids'], id)
 
 
 def get_your_event_list(id):
@@ -287,6 +354,33 @@ def get_event_list(id):
         get_auth(id)
     )
     return get_event_detail(event_ids['event_ids'], id)
+
+
+def get_follow_detail(follows_id, tg_id):
+    return {
+        1: {
+            'Вид спорта': 'Футбол',
+            'Локация': 'Таймс'
+        },
+        2: {
+            'Вид спорта': 'Покер',
+            'Локация': 'Общага'
+        }
+    }
+    # TODO
+    result = dict()
+    for follow_id in follows_id:
+        result[follow_id] = {}
+        data = util.post(
+            '/follow/get',
+            {
+                'follow_id': follow_id
+            },
+            get_auth(tg_id)
+        )
+        result[follow_id]['Вид спорта'] = util.id_to_sport(str(data['sport_id']))
+        result[follow_id]['Локация'] = util.id_to_location(str(data['location']))
+    return result
 
 
 def get_event_detail(events_id, tg_id):
@@ -317,6 +411,16 @@ def generate_event_buttons(bot, update, events):
                InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
                InlineKeyboardButton('Где?', callback_data='map:' + str(event_id)),
                InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
+        update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
+
+
+def generate_follow_buttons(bot, update, follows):
+    # TODO
+    for follow_id in follows:
+        msg = str()
+        for field in follows[follow_id]:
+            msg += str(field) + ': ' + str(follows[follow_id][field]) + '\n'
+        kb = [[InlineKeyboardButton('Отписаться', callback_data='unsubscribe:'+str(follow_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -412,6 +516,29 @@ def delete_event(bot, update):
         )
         bot.send_message(chat_id=query.message.chat_id,
                          text='Событие удалено')
+    except Exception as e:
+        bot.send_message(chat_id=query.message.chat_id,
+                         text=str(e))
+
+
+def unsubscribe(bot, update):
+    query = update.callback_query
+    data = query.data[len('unsubscribe:'):]
+
+    bot.edit_message_text(text="Отписываемся...",
+                          chat_id=query.message.chat_id,
+                          message_id=query.message.message_id)
+    # TODO
+    try:
+        util.post(
+            '/follow/remove',
+            {
+                'follow_id': int(data)
+            },
+            get_auth(query.message.chat_id)
+        )
+        bot.send_message(chat_id=query.message.chat_id,
+                         text='Подписка удалена')
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
