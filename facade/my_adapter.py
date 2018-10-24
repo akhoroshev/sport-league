@@ -399,7 +399,11 @@ class DB:
         return lst, 0, 0
 
     def create_follow(self, user_id, sport_id, location):
-        self.add_follow(user_id, sport_id, location)
+        try:
+            self.add_follow(user_id, sport_id, location)
+        except mysql.connector.errors.IntegrityError:
+            return 1, 'Duplicate entry'
+
         return 0, 0
 
     def remove_follow(self, follow_id):
