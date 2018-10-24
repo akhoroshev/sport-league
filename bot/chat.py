@@ -315,7 +315,7 @@ def generate_event_buttons(bot, update, events):
             msg += str(field) + ': ' + str(events[event_id][field]) + '\n'
         kb = [[InlineKeyboardButton('Присоединиться', callback_data='join:' + str(event_id)),
                InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
-               InlineKeyboardButton('Где?', callback_data='map:' + str(event_id))]]
+               InlineKeyboardButton('Где?', callback_data='map:' + str(event_id)),
                InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
