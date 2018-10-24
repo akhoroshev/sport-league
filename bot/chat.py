@@ -1,7 +1,7 @@
-from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, \
+    InlineKeyboardMarkup
 import util
 import pickle
-
 
 registered_users = {}
 user_states = {}
@@ -66,6 +66,7 @@ def check_registration(handler):
         else:
             update.message.reply_text('Для создания и просмотра событий необходимо авторизироваться!')
             return
+
     return wrapper
 
 
@@ -78,7 +79,9 @@ def start(bot, update):
                           "/create_event - создать спортивное событие и указать его параметры\n"
                           "/cancel - отменить текущий процесс\n"
                           "/list_all_events - показать все события\n"
-                          "/list_my_events - показать события, в которых вы участник\n")
+                          "/list_my_events - показать события, в которых вы участник\n"
+                          "/list_follows - отобразить отслеживаемые события\n"
+                          "/create_follow - начать отслеживать событие")
 
 
 def login(bot, update, args):
@@ -306,15 +309,15 @@ def follow_create(id):
 def event_create(id):
     util.post(
         '/event/create',
-          {
-              'sport_id': get_user_answer(id, 'event_sport'),
-              'timestamp': get_user_answer(id, 'event_date'),
-              'location': get_user_answer(id, 'event_location'),
-              'description': get_user_answer(id, 'event_description'),
-              'participants_number_max': get_user_answer(id, 'event_amount_of_players'),
-              'status_rating': get_user_answer(id, 'event_ranked')
-          },
-          get_auth(id)
+        {
+            'sport_id': get_user_answer(id, 'event_sport'),
+            'timestamp': get_user_answer(id, 'event_date'),
+            'location': get_user_answer(id, 'event_location'),
+            'description': get_user_answer(id, 'event_description'),
+            'participants_number_max': get_user_answer(id, 'event_amount_of_players'),
+            'status_rating': get_user_answer(id, 'event_ranked')
+        },
+        get_auth(id)
     )
 
 
@@ -401,13 +404,14 @@ def generate_follow_buttons(bot, update, follows):
         msg = str()
         for field in follows[follow_id]:
             msg += str(field) + ': ' + str(follows[follow_id][field]) + '\n'
-        kb = [[InlineKeyboardButton('Отписаться', callback_data='unsubscribe:'+str(follow_id))]]
+        kb = [[InlineKeyboardButton('Отписаться', callback_data='unsubscribe:' + str(follow_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
+
 
 def show_event_participants(bot, update):
     query = update.callback_query
     data = query.data[len('show:'):]
-    
+
     bot.edit_message_text(text="Готовим список участников события...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
@@ -423,15 +427,16 @@ def show_event_participants(bot, update):
         for participant in result['participants']:
             s_part = s_part + "☑️ " + participant + "\n"
         bot.send_message(chat_id=query.message.chat_id,
-                        text=s_part)
+                         text=s_part)
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
 
+
 def join_to_event(bot, update):
     query = update.callback_query
     data = query.data[len('join:'):]
-    
+
     bot.edit_message_text(text="Присоединяем к событию...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
