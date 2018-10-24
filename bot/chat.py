@@ -165,7 +165,7 @@ def request_for_list_your_follow(bot, update, *args, **kwargs):
 
 @check_registration
 def request_for_list_your_events(bot, update, *args, **kwargs):
-    generate_event_buttons(bot, update, get_your_event_list(update.message.chat_id))
+    generate_event_buttons(bot, update.message.chat_id, get_your_event_list(update.message.chat_id))
 
 
 @check_registration
@@ -238,10 +238,17 @@ def process_creating_event(bot, update):
             update.message.reply_text(str(e))
             return
         try:
-            event_create(id)
+            event_id, usernames = event_create(id)
             update.message.reply_text('Событие создано')
         except Exception as e:
             update.message.reply_text(str(e))
+            return
+        # TODO
+        send_notifications(
+            bot,
+            [chat_id for chat_id in registered_users if registered_users[chat_id]['username'] in usernames],
+            [event_id]
+        )
 
 
 def process_creating_follow(bot, update):
@@ -264,10 +271,13 @@ def process_creating_follow(bot, update):
         except ValueError as e:
             update.message.reply_text(str(e))
         try:
-            follow_create(id)
+            event_ids = follow_create(id)
             update.message.reply_text('Вы подписаны')
         except Exception as e:
             update.message.reply_text(str(e))
+            return
+        # TODO
+        send_notifications(bot, [update.message.chat_id], event_ids)
 
 
 def process_list_events(bot, update):
@@ -284,7 +294,7 @@ def process_list_events(bot, update):
             update.message.reply_text(str(e))
             return
         try:
-            generate_event_buttons(bot, update, get_event_list(id))
+            generate_event_buttons(bot, update.message.chat_id, get_event_list(id))
         except Exception as e:
             update.message.reply_text(str(e))
 
@@ -296,7 +306,7 @@ def input(bot, update):
 
 
 def follow_create(id):
-    util.post(
+    data = util.post(
         '/follow/add',
         {
             'sport_id': get_user_answer(id, 'follow_sport'),
@@ -304,10 +314,11 @@ def follow_create(id):
         },
         get_auth(id)
     )
+    return data['event_ids']
 
 
 def event_create(id):
-    util.post(
+    data = util.post(
         '/event/create',
         {
             'sport_id': get_user_answer(id, 'event_sport'),
@@ -319,6 +330,7 @@ def event_create(id):
         },
         get_auth(id)
     )
+    return data['event_id'], data['usernames']
 
 
 def get_your_follow_list(id):
@@ -340,7 +352,6 @@ def get_your_event_list(id):
 
 
 def get_event_list(id):
-    print(get_auth(id))
     event_ids = util.post(
         '/event/list',
         {
@@ -367,7 +378,7 @@ def get_follow_detail(follows_id, tg_id):
     return result
 
 
-def get_event_detail(events_id, tg_id):
+def get_event_detail(events_id, chat_id):
     result = dict()
     for event_id in events_id:
         result[event_id] = {}
@@ -376,7 +387,7 @@ def get_event_detail(events_id, tg_id):
             {
                 'event_id': event_id
             },
-            get_auth(tg_id))
+            get_auth(chat_id))
         result[event_id]['Вид спорта'] = util.id_to_sport(str(data['event_info']['sport_id']))
         result[event_id]['Время'] = util.timestamp_to_human(data['event_info']['timestamp'])
         result[event_id]['Локация'] = util.id_to_location(str(data['event_info']['location']))
@@ -386,7 +397,7 @@ def get_event_detail(events_id, tg_id):
     return result
 
 
-def generate_event_buttons(bot, update, events):
+def generate_event_buttons(bot, chat_id, events):
     for event_id in events:
         msg = str()
         for field in events[event_id]:
@@ -396,7 +407,7 @@ def generate_event_buttons(bot, update, events):
                InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))],
               [InlineKeyboardButton('Вывести список участников', callback_data='show:' + str(event_id)),
                InlineKeyboardButton('Где?', callback_data='map:' + str(event_id))]]
-        update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
+        bot.send_message(chat_id=chat_id, text=msg, reply_markup=InlineKeyboardMarkup(kb))
 
 
 def generate_follow_buttons(bot, update, follows):
@@ -550,3 +561,10 @@ def unsubscribe(bot, update):
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
+
+
+def send_notifications(bot, chat_ids, event_ids):
+    print(chat_ids, event_ids)
+    for chat_id in chat_ids:
+        generate_event_buttons(bot, chat_id, get_event_detail(event_ids, chat_id))
+
