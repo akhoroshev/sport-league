@@ -315,6 +315,7 @@ def generate_event_buttons(bot, update, events):
             msg += str(field) + ': ' + str(events[event_id][field]) + '\n'
         kb = [[InlineKeyboardButton('Присоединиться', callback_data='join:' + str(event_id)),
                InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
+               InlineKeyboardButton('Где?', callback_data='map:' + str(event_id))]]
                InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
@@ -358,6 +359,35 @@ def leave_from_event(bot, update):
         )
         bot.send_message(chat_id=query.message.chat_id,
                          text='Событие покинуто')
+    except Exception as e:
+        bot.send_message(chat_id=query.message.chat_id,
+                         text=str(e))
+
+
+def show_location_event(bot, update):
+    query = update.callback_query
+    data = query.data[len('map:'):]
+
+    bot.edit_message_text(text="Событие проходит тут:",
+                          chat_id=query.message.chat_id,
+                          message_id=query.message.message_id)
+    try:
+        ans = util.post(
+            '/event/get',
+            {
+                'event_id': int(data)
+            },
+            get_auth(query.message.chat_id)
+        )
+        location_id = ans['event_info']['location']
+        ans = util.post(
+            '/location/list',
+            {},
+            get_auth(query.message.chat_id)
+        )
+        ans = ans[str(location_id)]
+        bot.send_location(chat_id=query.message.chat_id,
+                          longitude=ans['longitude'], latitude=ans['latitude'])
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
