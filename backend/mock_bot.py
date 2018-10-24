@@ -19,12 +19,16 @@ if __name__ == '__main__':
 
     # test_request('/follow/add', {'username': 'bobbys', 'password': '678rexrex678', 'sport_id':1, 'location':2})
     # test_request('/follow/add', {'username': 'bobbys', 'password': '678rexrex678', 'sport_id':2, 'location':3})
-    # test_request('/follow/add', {'username': 'niikkio', 'password': 'qwerty7103', 'sport_id':2, 'location':3})
+    test_request('/event/join', {'username': 'bobbys', 'password': '678rexrex678', 'event_id':2})
+
+    test_request('/follow/add', {'username': 'bobbys', 'password': '678rexrex678', 'sport_id':3, 'location':3})
+
+    test_request('/follow/add', {'username': 'bobbys', 'password': '678rexrex678', 'sport_id':3, 'location':2})
 
     # test_request('/follow/get', {'username': 'bobbys', 'password': '678rexrex678', 'follow_id':2})
     # test_request('/follow/get', {'username': 'niikkio', 'password': 'qwerty7103', 'follow_id':3})
     
     # test_request('/follow/list', {'username': 'bobbys', 'password': '678rexrex678'})
 
-    test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty7103', 'follow_id': 2})
-    test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty7103', 'follow_id': 3})
+    # test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty7103', 'follow_id': 2})
+    # test_request('/follow/remove', {'username': 'niikkio', 'password': 'qwerty7103', 'follow_id': 3})
