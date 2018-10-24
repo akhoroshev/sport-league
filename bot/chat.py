@@ -160,7 +160,12 @@ def request_for_creating_follow(bot, update, *args, **kwargs):
 
 @check_registration
 def request_for_list_your_follow(bot, update, *args, **kwargs):
-    generate_follow_buttons(bot, update, get_your_follow_list(update.message.chat_id))
+    update.message.reply_text('Загружаем подписки...')
+    follows_list = get_your_follow_list(update.message.chat_id)
+    if follows_list:
+        generate_follow_buttons(bot, update, get_your_follow_list(update.message.chat_id))
+    else:
+        update.message.reply_text('Вы не подписаны ни на один вид спорта')
 
 
 @check_registration
