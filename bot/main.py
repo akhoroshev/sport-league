@@ -13,7 +13,7 @@ REQUEST_KWARGS={
 
 if __name__ == '__main__':
     chat.load_user_data()
-    updater = Updater(token='703010342:AAFsI5OC6hdp9hhLKayshOYJskYl862SXoY', request_kwargs=REQUEST_KWARGS)
+    updater = Updater(token='712387946:AAETtOXk7Qg_tnIHIvcYGprRHH05u9rP8PA', request_kwargs=REQUEST_KWARGS)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CallbackQueryHandler(chat.join_to_event, pattern='^join:'))
