@@ -303,6 +303,8 @@ def get_event_detail(events_id, tg_id):
         result[event_id]['Время'] = util.timestamp_to_human(data['event_info']['timestamp'])
         result[event_id]['Локация'] = util.id_to_location(str(data['event_info']['location']))
         result[event_id]['Число участников'] = data['event_info']['participants_number_max']
+        result[event_id]['Описание'] = data['event_info']['description']
+        result[event_id]['Статус'] = data['event_info']['state_open']
     return result
 
 
@@ -312,7 +314,8 @@ def generate_event_buttons(bot, update, events):
         for field in events[event_id]:
             msg += str(field) + ': ' + str(events[event_id][field]) + '\n'
         kb = [[InlineKeyboardButton('Присоединиться', callback_data='join:' + str(event_id)),
-               InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id))]]
+               InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
+               InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -342,7 +345,7 @@ def leave_from_event(bot, update):
     query = update.callback_query
     data = query.data[len('leave:'):]
 
-    bot.edit_message_text(text="Покидаем событие событие...",
+    bot.edit_message_text(text="Покидаем событие...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
     try:
@@ -355,6 +358,30 @@ def leave_from_event(bot, update):
         )
         bot.send_message(chat_id=query.message.chat_id,
                          text='Событие покинуто')
+    except Exception as e:
+        bot.send_message(chat_id=query.message.chat_id,
+                         text=str(e))
+
+
+def delete_event(bot, update):
+    query = update.callback_query
+    data = query.data[len('delete:'):]
+
+    bot.edit_message_text(text="Удаляем событие...",
+                          chat_id=query.message.chat_id,
+                          message_id=query.message.message_id)
+    try:
+        util.post(
+            '/event/close',
+            {
+                'event_id': int(data),
+                'event_status': 'Canceled',
+                'results': {}
+            },
+            get_auth(query.message.chat_id)
+        )
+        bot.send_message(chat_id=query.message.chat_id,
+                         text='Событие удалено')
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))

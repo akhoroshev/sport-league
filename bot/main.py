@@ -18,6 +18,7 @@ if __name__ == '__main__':
 
     dispatcher.add_handler(CallbackQueryHandler(chat.join_to_event, pattern='^join:'))
     dispatcher.add_handler(CallbackQueryHandler(chat.leave_from_event, pattern='^leave:'))
+    dispatcher.add_handler(CallbackQueryHandler(chat.delete_event, pattern='^delete:'))
     dispatcher.add_handler(MessageHandler(Filters.location, chat.input))
     dispatcher.add_handler(MessageHandler(Filters.text, chat.input))
     dispatcher.add_handler(CommandHandler('cancel', chat.cancel))
