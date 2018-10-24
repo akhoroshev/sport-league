@@ -232,8 +232,8 @@ def process_creating_event(bot, update):
     elif current_state is 'event_amount_of_players':
         try:
             amount = int(update.message.text)
-            if amount < 1:
-                raise ValueError('Число участников < 1')
+            if amount < 2:
+                raise ValueError('Число участников < 2')
             set_user_answer(id, 'event_amount_of_players', amount)
             update.message.reply_text('Это рейтинговое событие?', reply_markup=chose_ranked())
             set_user_state(id, 'event_ranked')
@@ -257,7 +257,8 @@ def process_creating_event(bot, update):
         send_notifications(
             bot,
             [chat_id for chat_id in registered_users if registered_users[chat_id]['username'] in usernames],
-            [event_id]
+            [event_id],
+            'Доступны новые события❗️'
         )
 
 
@@ -287,7 +288,7 @@ def process_creating_follow(bot, update):
             update.message.reply_text(str(e))
             return
         # TODO
-        send_notifications(bot, [update.message.chat_id], event_ids)
+        send_notifications(bot, [update.message.chat_id], event_ids, 'Доступны новые события❗️')
 
 
 def process_list_events(bot, update):
@@ -471,6 +472,18 @@ def join_to_event(bot, update):
         )
         bot.send_message(chat_id=query.message.chat_id,
                          text='Добавление успешно')
+        ev_info = util.post(
+            '/event/get',
+            {'event_id': int(data)},
+            get_auth(query.message.chat_id)
+        )
+        if len(ev_info['participants']) == ev_info['event_info']['participants_number_max']:
+            send_notifications(
+                bot,
+                [chat_id for chat_id in registered_users if registered_users[chat_id]['username'] in ev_info['participants']],
+                [int(data)],
+                'Событие заполнено❗️'
+            )
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
@@ -570,7 +583,10 @@ def unsubscribe(bot, update):
                          text=str(e))
 
 
-def send_notifications(bot, chat_ids, event_ids):
+def send_notifications(bot, chat_ids, event_ids, prefix_msg):
     for chat_id in chat_ids:
+        bot.send_message(
+            chat_id=chat_id,
+            text=prefix_msg
+        )
         generate_event_buttons(bot, chat_id, get_event_detail(event_ids, chat_id))
-
