@@ -57,9 +57,15 @@ def set_user_state(user_id, state):
 def check_registration(handler):
     def wrapper(bot, update, *args, **kwargs):
         if update.message.chat_id in registered_users:
+            try:
+                util.post('/register/check', registered_users[update.message.chat_id])
+            except Exception as e:
+                update.message.reply_text('Неправильный логин/пароль!')
+                return
             handler(bot, update, args, kwargs)
         else:
             update.message.reply_text('Для создания и просмотра событий необходимо авторизироваться!')
+            return
     return wrapper
 
 
@@ -80,6 +86,7 @@ def login(bot, update, args):
         bot.send_message(chat_id=update.message.chat_id, text='Логин и пароль необходимы!')
         return
     try:
+        util.post('/register/check', {'username': args[0], 'password': args[1]})
         registered_users[update.message.chat_id] = {
             'username': args[0],
             'password': args[1]
@@ -87,7 +94,7 @@ def login(bot, update, args):
         save_user_data()
         msg = 'Вход в систему успешно выполнен!'
     except Exception as e:
-        msg = 'Ошибка'
+        msg = 'Неправильный логин/пароль!'
     bot.send_message(chat_id=update.message.chat_id, text=msg)
 
 
@@ -105,7 +112,7 @@ def register(bot, update, args):
         save_user_data()
         msg = 'Регистрация успешно выполнена!'
     except Exception as e:
-        msg = 'Ошибка'
+        msg = 'Невозможно зарегестрироваться с таким логином/паролем!'
     bot.send_message(chat_id=update.message.chat_id, text=msg)
 
 
