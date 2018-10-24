@@ -243,6 +243,8 @@ def process_list_events(bot, update):
             update.message.reply_text(str(e))
             return
         try:
+            if get_event_list(id) == {}:
+                update.message.reply_text('Событий нет')
             generate_event_buttons(bot, update, get_event_list(id))
         except Exception as e:
             update.message.reply_text(str(e))
@@ -274,6 +276,9 @@ def get_your_event_list(id):
         {},
         get_auth(id)
     )
+    if event_ids == []:
+        update.message.reply_text('Событий нет')
+            #    update.message.reply_text(event_ids)
     return get_event_detail(event_ids['event_ids'], id)
 
 
@@ -320,7 +325,7 @@ def show_event_participants(bot, update):
     query = update.callback_query
     data = query.data[len('show:'):]
     
-    bot.edit_message_text(text="Готовим список участников события...",
+    bot.send_message(text="Готовим список участников события...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
     try:
@@ -346,7 +351,7 @@ def join_to_event(bot, update):
     query = update.callback_query
     data = query.data[len('join:'):]
     
-    bot.edit_message_text(text="Присоединяем к событию...",
+    bot.send_message(text="Присоединяем к событию...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
     try:
@@ -368,7 +373,7 @@ def leave_from_event(bot, update):
     query = update.callback_query
     data = query.data[len('leave:'):]
 
-    bot.edit_message_text(text="Покидаем событие событие...",
+    bot.send_message(text="Покидаем событие...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
     try:
