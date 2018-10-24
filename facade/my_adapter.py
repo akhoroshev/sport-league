@@ -375,8 +375,8 @@ class DB:
         result = c.fetchall()
         return result, 0, 0
 
-    def get_list_users(self, sport_id):
-        sql = "SELECT * FROM follows WHERE sport_id=%s" % (sport_id)
+    def get_list_users(self, sport_id, location):
+        sql = "SELECT * FROM follows WHERE sport_id=%s AND location=%s" % (sport_id, location)
         c = self.query(sql)
         result = c.fetchall()
         lst = []

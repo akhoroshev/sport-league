@@ -50,6 +50,16 @@ def register(**options):
 
     return response_ok()
 
+@app.route('/register/check', methods=['POST'])
+@request_json_fields('username',
+                     'password')
+def check(**options):
+    status, error = DB().auth(options['username'], options['password'])
+
+    if status:
+        return response_error(status, error)
+
+    return response_ok()
 
 @app.route('/event/create', methods=['POST'])
 @request_json_fields('username', 'password', 'sport_id', 'timestamp', 'location', 'description', 'participants_number_max', 'status_rating')
@@ -71,7 +81,11 @@ def create_event(**options):
     if status:
         return response_error(status, error)
 
-    return response_ok({'event_id': event_id})
+    usernames, status, error = db.get_list_users(options['sport_id'], options['location'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'event_id': event_id, 'usernames': usernames})
 
 
 @app.route('/event/close', methods=['POST'])
