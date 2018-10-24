@@ -431,10 +431,8 @@ def generate_follow_buttons(bot, update, follows):
 def show_event_participants(bot, update):
     query = update.callback_query
     data = query.data[len('show:'):]
+    query.answer()
 
-    bot.send_message(text="Готовим список участников события...",
-                          chat_id=query.message.chat_id
-    )
     try:
         result = util.post(
             '/event/get',
@@ -456,11 +454,8 @@ def show_event_participants(bot, update):
 def join_to_event(bot, update):
     query = update.callback_query
     data = query.data[len('join:'):]
-    
-    bot.send_message(
-        text="Присоединяем к событию...",
-        chat_id=query.message.chat_id
-    )
+    query.answer()
+
     try:
         util.post(
             '/event/join',
@@ -479,11 +474,8 @@ def join_to_event(bot, update):
 def leave_from_event(bot, update):
     query = update.callback_query
     data = query.data[len('leave:'):]
+    query.answer()
 
-    bot.send_message(
-        text="Покидаем событие...",
-        chat_id=query.message.chat_id,
-    )
     try:
         util.post(
             '/event/leave',
@@ -492,8 +484,11 @@ def leave_from_event(bot, update):
             },
             get_auth(query.message.chat_id)
         )
-        bot.send_message(chat_id=query.message.chat_id,
-                         text='Событие покинуто')
+        bot.edit_message_text(
+            text="Событие покинуто",
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id
+        )
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
@@ -502,10 +497,8 @@ def leave_from_event(bot, update):
 def show_location_event(bot, update):
     query = update.callback_query
     data = query.data[len('map:'):]
+    query.answer()
 
-    bot.edit_message_text(text="Событие проходит тут:",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
     try:
         ans = util.post(
             '/event/get',
@@ -531,10 +524,8 @@ def show_location_event(bot, update):
 def delete_event(bot, update):
     query = update.callback_query
     data = query.data[len('delete:'):]
+    query.answer()
 
-    bot.edit_message_text(text="Удаляем событие...",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
     try:
         util.post(
             '/event/close',
@@ -545,8 +536,9 @@ def delete_event(bot, update):
             },
             get_auth(query.message.chat_id)
         )
-        bot.send_message(chat_id=query.message.chat_id,
-                         text='Событие удалено')
+        bot.edit_message_text(text="Событие удалено",
+                              chat_id=query.message.chat_id,
+                              message_id=query.message.message_id)
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
@@ -555,10 +547,8 @@ def delete_event(bot, update):
 def unsubscribe(bot, update):
     query = update.callback_query
     data = query.data[len('unsubscribe:'):]
+    query.answer()
 
-    bot.edit_message_text(text="Отписываемся...",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
     try:
         util.post(
             '/follow/remove',
@@ -567,15 +557,15 @@ def unsubscribe(bot, update):
             },
             get_auth(query.message.chat_id)
         )
-        bot.send_message(chat_id=query.message.chat_id,
-                         text='Подписка удалена')
+        bot.edit_message_text(text="Подписка удалена",
+                              chat_id=query.message.chat_id,
+                              message_id=query.message.message_id)
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
 
 
 def send_notifications(bot, chat_ids, event_ids):
-    print(chat_ids, event_ids)
     for chat_id in chat_ids:
         generate_event_buttons(bot, chat_id, get_event_detail(event_ids, chat_id))
 
