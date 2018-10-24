@@ -296,7 +296,7 @@ def process_list_events(bot, update):
         try:
             event_list = get_event_list(id)
             if event_list:
-                generate_event_buttons(bot, update, event_list)
+                generate_event_buttons(bot, update.message.chat_id, event_list)
             else:
                 update.message.reply_text('Событий нет')
         except Exception as e:
