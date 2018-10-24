@@ -103,7 +103,6 @@ def register(bot, update, args):
         bot.send_message(chat_id=update.message.chat_id, text='Логин и пароль необходимы!')
         return
     try:
-        # TODO:
         util.post('/register', {'username': args[0], 'password': args[1]})
         registered_users[update.message.chat_id] = {
             'username': args[0],
@@ -150,7 +149,6 @@ def request_for_creating_event(bot, update, *args, **kwargs):
 
 @check_registration
 def request_for_creating_follow(bot, update, *args, **kwargs):
-    # TODO
     bot.send_message(chat_id=update.message.chat_id,
                      text='Выбери вид спорта из предложенных ⚽️🏀🏓',
                      reply_markup=chose_sport())
@@ -159,7 +157,6 @@ def request_for_creating_follow(bot, update, *args, **kwargs):
 
 @check_registration
 def request_for_list_your_follow(bot, update, *args, **kwargs):
-    # TODO
     generate_follow_buttons(bot, update, get_your_follow_list(update.message.chat_id))
 
 
@@ -296,11 +293,6 @@ def input(bot, update):
 
 
 def follow_create(id):
-    # TODO
-    print({
-            'sport_id': get_user_answer(id, 'follow_sport'),
-            'location': get_user_answer(id, 'follow_location')
-        })
     util.post(
         '/follow/add',
         {
@@ -357,17 +349,6 @@ def get_event_list(id):
 
 
 def get_follow_detail(follows_id, tg_id):
-    return {
-        1: {
-            'Вид спорта': 'Футбол',
-            'Локация': 'Таймс'
-        },
-        2: {
-            'Вид спорта': 'Покер',
-            'Локация': 'Общага'
-        }
-    }
-    # TODO
     result = dict()
     for follow_id in follows_id:
         result[follow_id] = {}
@@ -378,8 +359,8 @@ def get_follow_detail(follows_id, tg_id):
             },
             get_auth(tg_id)
         )
-        result[follow_id]['Вид спорта'] = util.id_to_sport(str(data['sport_id']))
-        result[follow_id]['Локация'] = util.id_to_location(str(data['location']))
+        result[follow_id]['Вид спорта'] = util.id_to_sport(str(data['follow_info']['sport_id']))
+        result[follow_id]['Локация'] = util.id_to_location(str(data['follow_info']['location']))
     return result
 
 
@@ -415,7 +396,6 @@ def generate_event_buttons(bot, update, events):
 
 
 def generate_follow_buttons(bot, update, follows):
-    # TODO
     for follow_id in follows:
         msg = str()
         for field in follows[follow_id]:
@@ -528,7 +508,6 @@ def unsubscribe(bot, update):
     bot.edit_message_text(text="Отписываемся...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
-    # TODO
     try:
         util.post(
             '/follow/remove',
