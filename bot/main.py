@@ -19,6 +19,10 @@ if __name__ == '__main__':
     dispatcher.add_handler(CallbackQueryHandler(chat.join_to_event, pattern='^join:'))
     dispatcher.add_handler(CallbackQueryHandler(chat.leave_from_event, pattern='^leave:'))
     dispatcher.add_handler(CallbackQueryHandler(chat.show_event_participants, pattern='^show:'))
+    dispatcher.add_handler(CallbackQueryHandler(chat.show_location_event, pattern='^map:'))
+    dispatcher.add_handler(CallbackQueryHandler(chat.delete_event, pattern='^delete:'))
+    dispatcher.add_handler(CallbackQueryHandler(chat.unsubscribe, pattern='^unsubscribe:'))
+
     dispatcher.add_handler(MessageHandler(Filters.location, chat.input))
     dispatcher.add_handler(MessageHandler(Filters.text, chat.input))
     dispatcher.add_handler(CommandHandler('cancel', chat.cancel))
@@ -28,5 +32,7 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('create_event', chat.request_for_creating_event))
     dispatcher.add_handler(CommandHandler('list_all_events', chat.request_for_list_events))
     dispatcher.add_handler(CommandHandler('list_my_events', chat.request_for_list_your_events))
+    dispatcher.add_handler(CommandHandler('list_follows', chat.request_for_list_your_follow))
+    dispatcher.add_handler(CommandHandler('create_follow', chat.request_for_creating_follow))
 
     updater.start_polling()

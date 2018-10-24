@@ -116,6 +116,7 @@ class DB:
         )
         self.query(sql, params)
         self.conn.commit()
+        return 0, 0
 
     def add_place(self, name, description, longtitude, latitude):
         statement = 'INSERT INTO places(%s) VALUES(%s)'
@@ -230,15 +231,15 @@ class DB:
         res = c.fetchall()
         sport_id = res[0][2]
         user_id = self.get_user_id(username)
-        sql = "SELECT * FROM ratings WHERE user_id=%s" % (user_id)
+        sql = "SELECT * FROM ratings WHERE user_id=%s" % (user_id[0])
         c = self.query(sql)
         res = c.fetchall()
         if res == []:
-            self.add_rating(user_id, sport_id, 0)
+            self.add_rating(user_id[0], sport_id, 0)
         statement = 'UPDATE ratings SET %s WHERE %s;'
         fields1 = ['points=%s', ]
         fields2 = ['sport_id=%s', 'user_id=%s']
-        params = (points, sport_id, user_id)
+        params = (points, sport_id, user_id[0])
         sql = statement % (
             ', '.join(fields1),
             ' AND '.join(fields2)
@@ -250,7 +251,7 @@ class DB:
         statement = 'UPDATE participants SET %s WHERE %s;'
         fields1 = ['result=\'%s\'', ]
         fields2 = ['user_id=%s', 'event_id=%s']
-        params = (result, user_id, event_id)
+        params = (result, user_id[0], event_id)
         sql = statement % (
             ', '.join(fields1),
             ' AND '.join(fields2)
@@ -323,11 +324,15 @@ class DB:
         c = self.query("SELECT LAST_INSERT_ID()")
         last_id = c.fetchall();
         self.join_event(admin_id, last_id[0][0])
-        return 1, 0, 0
+        return last_id[0][0], 0, 0
 
-    def get_list_events(self, sport_id):
+    def get_list_events(self, sport_id, location=0):
         sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (
             sport_id)
+
+        if location:
+            sql += " AND location=\'%s\'" % (location)
+
         c = self.query(sql)
         result = c.fetchall()
         lst = []
@@ -381,7 +386,7 @@ class DB:
         result = c.fetchall()
         lst = []
         for res in result:
-            lst.append(self.get_user_name(res[0]))
+            lst.append(self.get_user_name(res[1]))
         return lst, 0, 0
 
     def get_list_follows(self, user_id):
@@ -390,26 +395,40 @@ class DB:
         result = c.fetchall()
         lst = []
         for res in result:
-            lst.append(res[1])
+            lst.append(res[0])
         return lst, 0, 0
 
-    def remove_follows(self, user_id, sport_id=0, location=0):
-        if not sport_id and not location:
-            sql = "DELETE FROM follows WHERE user_id=\'%s\'" % (
-            user_id)
-        elif not location:
-            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\'" % (
-                user_id, sport_id)
-        elif not sport_id:
-            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND location=\'%s\'" % (
-                user_id, location)
-        else:
-            sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\' AND location=\'%s\'" % (
-                user_id, sport_id, location)
+    def create_follow(self, user_id, sport_id, location):
+        self.add_follow(user_id, sport_id, location)
+        return 0, 0
+
+    def remove_follow(self, follow_id):
+        sql = "DELETE FROM follows WHERE follow_id=\'%s\'" % (follow_id)
         cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
         self.conn.commit()
         return 0, 0
+
+    def get_follow_info(self, follow_id):
+        statement = 'SELECT * FROM follows WHERE %s;'
+        fields = ['follow_id=\'%s\'']
+        params = (follow_id)
+        sql = statement % (
+            ', '.join(fields)
+        )
+        sql = sql % params
+        c = self.query(sql)
+        result = c.fetchall()
+        if len(result) == 0:
+            return None, 1, "No such follow"
+        lst = result[0]
+
+        data = {
+            'user_id':  lst[1],
+            'sport_id': lst[2],
+            'location': lst[3]
+        }
+        return data, 0, 0
 
     def get_list_locations(self):
         sql = 'SELECT * FROM places;'
@@ -419,7 +438,9 @@ class DB:
 
     def get_user_events(self, username):
         user_id = self.get_user_id(username)
-        sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
+        sql = "SELECT participants.* FROM participants LEFT JOIN events \
+                ON participants.event_id = events.event_id \
+                WHERE participants.user_id=%s AND events.state_open=\'Opened\';" % (user_id[0])
         c = self.query(sql)
         result = c.fetchall()
         lst = []
