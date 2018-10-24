@@ -390,8 +390,9 @@ def generate_event_buttons(bot, update, events):
             msg += str(field) + ': ' + str(events[event_id][field]) + '\n'
         kb = [[InlineKeyboardButton('Присоединиться', callback_data='join:' + str(event_id)),
                InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
-               InlineKeyboardButton('Где?', callback_data='map:' + str(event_id)),
-               InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
+               InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))],
+              [InlineKeyboardButton('Вывести список участников', callback_data='show:' + str(event_id)),
+               InlineKeyboardButton('Где?', callback_data='map:' + str(event_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -403,11 +404,34 @@ def generate_follow_buttons(bot, update, follows):
         kb = [[InlineKeyboardButton('Отписаться', callback_data='unsubscribe:'+str(follow_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
+def show_event_participants(bot, update):
+    query = update.callback_query
+    data = query.data[len('show:'):]
+    
+    bot.edit_message_text(text="Готовим список участников события...",
+                          chat_id=query.message.chat_id,
+                          message_id=query.message.message_id)
+    try:
+        result = util.post(
+            '/event/get',
+            {
+                'event_id': int(data)
+            },
+            get_auth(query.message.chat_id)
+        )
+        s_part = str()
+        for participant in result['participants']:
+            s_part = s_part + "☑️ " + participant + "\n"
+        bot.send_message(chat_id=query.message.chat_id,
+                        text=s_part)
+    except Exception as e:
+        bot.send_message(chat_id=query.message.chat_id,
+                         text=str(e))
 
 def join_to_event(bot, update):
     query = update.callback_query
     data = query.data[len('join:'):]
-
+    
     bot.edit_message_text(text="Присоединяем к событию...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
