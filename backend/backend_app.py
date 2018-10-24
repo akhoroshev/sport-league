@@ -86,6 +86,8 @@ def create_event(**options):
     if status:
         return response_error(status, error)
 
+    usernames.remove(options['username'])
+
     return response_ok({'event_id': event_id, 'usernames': usernames})
 
 
@@ -313,8 +315,16 @@ def add_follow(**options):
     if status:
         return response_error(status, error)
 
+    suggested_events = []
+    for event in events:
+        participants, status, error = db.get_event_participants(event)
+        if status:
+            return response_error(status, error)
 
-    return response_ok({'event_ids': events})
+        if not options['username'] in participants:
+            suggested_events.append(event)
+
+    return response_ok({'event_ids': suggested_events})
 
 
 @app.route('/follow/remove', methods=['POST'])
