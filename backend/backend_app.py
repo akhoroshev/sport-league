@@ -5,6 +5,7 @@ from flask.json import jsonify
 from flask import request, abort
 
 from datetime import datetime
+import random
 
 import sys
 sys.path.insert(0, '../facade')
@@ -103,18 +104,21 @@ def close_event(**options):
     if admin_id != user_id:
         return response_error(1, 'you are not event admin')
 
-    participants, status, error = db.get_event_participants(options['event_id'])
-    if status:
-        return response_error(status, error)
-
-    if not all(elem in participants for elem in options['results'].keys()):
-        return response_error(1, "list of results doesnt match with participants")
-
-    for username, result in options['results'].items():
-        points = 2 if result == 'W' else 1 if result == 'D' else 0
-        status, errot = db.set_result(options['event_id'], username, result, points)
+    if options['event_status'] == 'Closed':
+        participants, status, error = db.get_event_participants(options['event_id'])
         if status:
             return response_error(status, error)
+
+        if not all(elem in participants for elem in options['results'].keys()):
+            return response_error(1, "list of results doesnt match with participants")
+
+        # for username, result in options['results'].items():
+        for username in participants:
+            result = random.choice(['W', 'D', 'L']) 
+            points = 2 if result == 'W' else 1 if result == 'D' else 0
+            status, errot = db.set_result(options['event_id'], username, result, points)
+            if status:
+                return response_error(status, error)
 
     status, error = db.update_event_status(options['event_id'], options['event_status'])
     if status:
@@ -301,26 +305,53 @@ def add_follow(**options):
     if status:
         return response_error(status, error)
 
-    status, error = db.add_follow(user_id, options['sport_id'], options['location'])
+    status, error = db.create_follow(user_id, options['sport_id'], options['location'])
     if status:
         return response_error(status, error)
 
-    return response_ok()
+    events, status, error = db.get_list_events(options['sport_id'], options['location'])
+    if status:
+        return response_error(status, error)
+
+
+    return response_ok({'event_ids': events})
 
 
 @app.route('/follow/remove', methods=['POST'])
-@request_json_fields('username', 'password', 'sport_id')
+@request_json_fields('username', 'password', 'follow_id')
 def remove_follow(**options):
     db = DB()
     user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    status, error = db.remove_follows(user_id, options['sport_id'])
+    data, status, error = db.get_follow_info(options['follow_id'])
+    if status:
+        return response_error(status, error)
+
+    if data['user_id'] != user_id:
+        return response_error(1, 'you cant remove others follows')
+
+    status, error = db.remove_follow(options['follow_id'])
     if status:
         return response_error(status, error)
 
     return response_ok()
+
+
+@app.route('/follow/get', methods=['POST'])
+@request_json_fields('username', 'password', 'follow_id')
+def get_follow(**options):
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
+    if status:
+        return response_error(status, error)
+
+    data, status, error = db.get_follow_info(options['follow_id'])
+    if status:
+        return response_error(status, error)
+
+    return response_ok({'follow_info': data})
 
 
 @app.route('/location/list', methods=['POST'])
