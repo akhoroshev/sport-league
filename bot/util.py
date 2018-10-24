@@ -84,7 +84,10 @@ def parse_time(msg_time):
     if msg_time in action:
         return action[msg_time]()
     try:
-        return int(time.mktime(datetime.datetime.strptime(msg_time, "%m-%d-%H").timetuple()))
+        ans = datetime.datetime.strptime(msg_time, "%m-%d-%H").replace(year=datetime.date.today().year)
+        if ans < datetime.datetime.today():
+            ans = ans.replace(year=ans.year + 1)
+        return int(time.mktime(ans.timetuple()))
     except Exception as e:
         raise ValueError('Выбери время еще раз')
 
