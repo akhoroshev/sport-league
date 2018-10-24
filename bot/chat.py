@@ -294,7 +294,11 @@ def process_list_events(bot, update):
             update.message.reply_text(str(e))
             return
         try:
-            generate_event_buttons(bot, update.message.chat_id, get_event_list(id))
+            event_list = get_event_list(id)
+            if event_list:
+                generate_event_buttons(bot, update, event_list)
+            else:
+                update.message.reply_text('Событий нет')
         except Exception as e:
             update.message.reply_text(str(e))
 
@@ -423,9 +427,9 @@ def show_event_participants(bot, update):
     query = update.callback_query
     data = query.data[len('show:'):]
 
-    bot.edit_message_text(text="Готовим список участников события...",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
+    bot.send_message(text="Готовим список участников события...",
+                          chat_id=query.message.chat_id
+    )
     try:
         result = util.post(
             '/event/get',
@@ -447,10 +451,11 @@ def show_event_participants(bot, update):
 def join_to_event(bot, update):
     query = update.callback_query
     data = query.data[len('join:'):]
-
-    bot.edit_message_text(text="Присоединяем к событию...",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
+    
+    bot.send_message(
+        text="Присоединяем к событию...",
+        chat_id=query.message.chat_id
+    )
     try:
         util.post(
             '/event/join',
@@ -470,9 +475,10 @@ def leave_from_event(bot, update):
     query = update.callback_query
     data = query.data[len('leave:'):]
 
-    bot.edit_message_text(text="Покидаем событие...",
-                          chat_id=query.message.chat_id,
-                          message_id=query.message.message_id)
+    bot.send_message(
+        text="Покидаем событие...",
+        chat_id=query.message.chat_id,
+    )
     try:
         util.post(
             '/event/leave',
