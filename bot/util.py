@@ -75,14 +75,14 @@ def time_list():
 
 
 def parse_time(msg_time):
-    cur_time = int(time.time())
+    cur_time = datetime.datetime.today()
     action = {
-        'Сейчас': lambda : cur_time,
-        'Через пару часов': lambda : cur_time + 2 * 60 * 60,
-        'Вечером': lambda : cur_time - (cur_time % 86400) + 72000
+        'Сейчас': lambda: cur_time + datetime.timedelta(hours=3),
+        'Через пару часов': lambda: cur_time + datetime.timedelta(hours=5),
+        'Вечером': lambda: (cur_time + datetime.timedelta(hours=3)).replace(hour=20, minute=0, second=0)
     }
     if msg_time in action:
-        return action[msg_time]()
+        return int(time.mktime(action[msg_time]().timetuple()))
     try:
         ans = datetime.datetime.strptime(msg_time, "%m-%d-%H").replace(year=datetime.date.today().year)
         if ans < datetime.datetime.today():
