@@ -419,7 +419,9 @@ class DB:
 
     def get_user_events(self, username):
         user_id = self.get_user_id(username)
-        sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
+        sql = "SELECT participants.* FROM participants LEFT JOIN events \
+                ON participants.event_id = events.event_id \
+                WHERE participants.user_id=%s AND events.state_open=\'Opened\';" % (user_id[0])
         c = self.query(sql)
         result = c.fetchall()
         lst = []
