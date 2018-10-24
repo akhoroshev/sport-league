@@ -10,27 +10,18 @@ mysqlparams = {
 
 
 class DB:
-    conn = None
-    cursor = None
+    def __init__(self):
+        self.conn = mysql.connector.connect(**mysqlparams)
 
-    @staticmethod
-    def connect():
-        DB.conn = mysql.connector.connect(**mysqlparams)
-        DB.cursor = DB.conn.cursor()
+    def __del__(self):
+        self.conn.close()
 
-    @staticmethod
-    def query(sql, params=tuple()):
-        try:
-            DB.cursor = DB.conn.cursor()
-            DB.cursor.execute(sql, params)
-        except (AttributeError, mysql.connector.OperationalError) as e:
-            DB.connect()
-            DB.cursor = DB.conn.cursor()
-            DB.cursor.execute(sql, params)
-        return DB.cursor
+    def query(self, sql, params=tuple()):
+        cursor = self.conn.cursor()
+        cursor.execute(sql, params)
+        return cursor
 
-    @staticmethod
-    def add_user(name, user_password):
+    def add_user(self, name, user_password):
         statement = 'INSERT INTO users(%s) VALUES(%s)'
         fields = ['name', 'user_password']
         params = (name, user_password)
@@ -39,11 +30,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_sport(name, description):
+    def add_sport(self, name, description):
         statement = 'INSERT INTO sports(%s) VALUES(%s)'
         fields = ['name', 'description']
         params = (name, description)
@@ -52,11 +42,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_event(
+    def add_event(self,
             admin_id,
             sport_id,
             event_date,
@@ -89,11 +78,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_participant(user_id, event_id, result):
+    def add_participant(self, user_id, event_id, result):
         statement = 'INSERT INTO participants(%s) VALUES(%s)'
         fields = ['user_id', 'event_id', 'result']
         params = (user_id, event_id, result)
@@ -102,11 +90,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_rating(user_id, sport_id, points):
+    def add_rating(self, user_id, sport_id, points):
         statement = 'INSERT INTO ratings(%s) VALUES(%s)'
         fields = ['user_id', 'sport_id', 'points']
         params = (user_id, sport_id, points)
@@ -115,11 +102,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_follow(user_id, sport_id, location):
+    def add_follow(self, user_id, sport_id, location):
         statement = 'INSERT INTO follows(%s) VALUES(%s)'
         fields = ['user_id', 'sport_id', 'location']
         params = (user_id, sport_id, location)
@@ -128,11 +114,10 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def add_place(name, description, longtitude, latitude):
+    def add_place(self, name, description, longtitude, latitude):
         statement = 'INSERT INTO places(%s) VALUES(%s)'
         fields = ['name', 'description', 'longitude', 'latitude']
         params = (name, description, longtitude, latitude)
@@ -141,51 +126,46 @@ class DB:
             ', '.join(fields),
             ', '.join(['%s'] * len(params))
         )
-        DB.query(sql, params)
-        DB.conn.commit()
+        self.query(sql, params)
+        self.conn.commit()
 
-    @staticmethod
-    def get_user_id(name):
+    def get_user_id(self, name):
         statement = 'SELECT * FROM users WHERE name=\'%s\';'
         sql = statement % name
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, 'No such user in database'
         return result[0][0], 0, 0
 
-    @staticmethod
-    def get_user_name(user_id):
+    def get_user_name(self, user_id):
         statement = 'SELECT * FROM users WHERE user_id=\'%s\';'
         sql = statement % user_id
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, 'No such user in database'
         return result[0][1], 0, 0
 
-    @staticmethod
-    def get_sport_id(name):
+    def get_sport_id(self, name):
         statement = 'SELECT * FROM sports WHERE name=\'%s\';'
         sql = statement % name
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, 'No such sport in database'
         return result[0][0], 0, 0
 
-    @staticmethod
-    def get_sport_name(sport_id):
+    def get_sport_name(self, sport_id):
         statement = 'SELECT * FROM sports WHERE sport_id=\'%s\';'
         sql = statement % sport_id
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, 'No such user in database'
         return result[0][1], 0, 0
 
-    @staticmethod
-    def create_user(username, password):
+    def create_user(self, username, password):
         if len(password) < 8:
             return 1, 'Too short password'
         if not password.isalnum():
@@ -194,11 +174,10 @@ class DB:
             return 1, 'Password must contain also numbers'
         if password.isdigit():
             return 1, 'Password must contain also letters'
-        DB.add_user(username, password)
+        self.add_user(username, password)
         return 0, 0
 
-    @staticmethod
-    def auth(username, password):
+    def auth(self, username, password):
         statement = 'SELECT * FROM users WHERE %s;'
         fields = ['name=\'%s\'']
         params = (username)
@@ -206,17 +185,15 @@ class DB:
             ', '.join(fields)
         )
         sql = sql % params
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, "No such user"
         if result[0][2] != password:
             return None, 1, "Wrong password"
-#        print("auth: username={}, password={}".format(username, password))
         return result[0][0], 0, 0
 
-    @staticmethod
-    def get_event_admin_id(event_id):
+    def get_event_admin_id(self, event_id):
         statement = 'SELECT * FROM events WHERE %s;'
         fields = ['event_id=\'%s\'']
         params = (event_id)
@@ -224,15 +201,14 @@ class DB:
             ', '.join(fields)
         )
         sql = sql % params
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, "No such event"
         return result[0][1], 0, 0
 
-    @staticmethod
-    def update_event_status(event_id, event_status):
-        if DB.get_event_admin_id(event_id) == []:
+    def update_event_status(self, event_id, event_status):
+        if self.get_event_admin_id(event_id) == []:
             return 1, "No such event"
         statement = 'UPDATE events SET %s WHERE %s;'
         fields1 = ['state_open=\'%s\'']
@@ -243,23 +219,22 @@ class DB:
             ', '.join(fields2)
         )
         sql = sql % params
-        cursor = DB.conn.cursor(buffered=True)
+        cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
-        DB.conn.commit()
+        self.conn.commit()
         return 0, 0
 
-    @staticmethod
-    def set_result(event_id, username, result, points):
+    def set_result(self, event_id, username, result, points):
         sql = "SELECT * FROM events WHERE event_id=%s" % (event_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         res = c.fetchall()
         sport_id = res[0][2]
-        user_id = DB.get_user_id(username)
+        user_id = self.get_user_id(username)
         sql = "SELECT * FROM ratings WHERE user_id=%s" % (user_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         res = c.fetchall()
         if res == []:
-            DB.add_rating(user_id, sport_id, 0)
+            self.add_rating(user_id, sport_id, 0)
         statement = 'UPDATE ratings SET %s WHERE %s;'
         fields1 = ['points=%s', ]
         fields2 = ['sport_id=%s', 'user_id=%s']
@@ -269,9 +244,9 @@ class DB:
             ' AND '.join(fields2)
         )
         sql = sql % params
-        cursor = DB.conn.cursor(buffered=True)
+        cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
-        DB.conn.commit()
+        self.conn.commit()
         statement = 'UPDATE participants SET %s WHERE %s;'
         fields1 = ['result=\'%s\'', ]
         fields2 = ['user_id=%s', 'event_id=%s']
@@ -281,13 +256,12 @@ class DB:
             ' AND '.join(fields2)
         )
         sql = sql % params
-        cursor = DB.conn.cursor(buffered=True)
+        cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
-        DB.conn.commit()
+        self.conn.commit()
         return 0, 0
 
-    @staticmethod
-    def get_event_info(event_id):
+    def get_event_info(self, event_id):
         statement = 'SELECT * FROM events WHERE %s;'
         fields = ['event_id=\'%s\'']
         params = (event_id)
@@ -295,7 +269,7 @@ class DB:
             ', '.join(fields)
         )
         sql = sql % params
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
             return None, 1, "No such event"
@@ -303,7 +277,7 @@ class DB:
 
         data = {
             'sport_id': lst[2],
-            'timestamp': lst[3],  # распарсить вывод
+            'timestamp': lst[3],
             'location': lst[4],
             'description': lst[5],
             'participants_number_max': lst[6],
@@ -312,8 +286,7 @@ class DB:
         }
         return data, 0, 0
 
-    @staticmethod
-    def get_event_participants(event_id):
+    def get_event_participants(self, event_id):
         statement = 'SELECT * FROM participants WHERE %s;'
         fields = ['event_id=\'%s\'']
         params = (event_id)
@@ -321,17 +294,16 @@ class DB:
             ', '.join(fields)
         )
         sql = sql % params
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:
-            lst.append(DB.get_user_name(res[0]))
+            lst.append(self.get_user_name(res[0]))
         if len(lst) == 0:
             return None, 1, "No event participants"
         return lst, 0, 0
 
-    @staticmethod
-    def create_event(
+    def create_event(self,
             admin_id,
             sport_id,
             timestamp,
@@ -339,7 +311,7 @@ class DB:
             description,
             participants_number_max,
             status_rating):
-        DB.add_event(
+        self.add_event(
             admin_id,
             sport_id,
             timestamp,
@@ -348,89 +320,80 @@ class DB:
             participants_number_max,
             status_rating,
             'Opened')
-        c = DB.query("SELECT LAST_INSERT_ID()")
+        c = self.query("SELECT LAST_INSERT_ID()")
         last_id = c.fetchall();
-        DB.join_event(admin_id, last_id[0][0])
+        self.join_event(admin_id, last_id[0][0])
         return 1, 0, 0
 
-    @staticmethod
-    def get_list_events(sport_id):
+    def get_list_events(self, sport_id):
         sql = "SELECT * FROM events WHERE state_open=\'Opened\' AND sport_id=\'%s\'" % (
             sport_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:
             lst.append(res[0])
         return lst, 0, 0
 
-    @staticmethod
-    def join_event(user_id, event_id):
-        if DB.get_event_admin_id(event_id) is None:
+    def join_event(self, user_id, event_id):
+        if self.get_event_admin_id(event_id) is None:
             return 0, 0
-        DB.add_participant(user_id, event_id, None)
+        self.add_participant(user_id, event_id, None)
         return 0, 0
 
-    @staticmethod
-    def leave_event(user_id, event_id):
+    def leave_event(self, user_id, event_id):
         sql = "DELETE FROM participants WHERE user_id=\'%s\' AND event_id=\'%s\'" % (
             user_id, event_id)
-        cursor = DB.conn.cursor(buffered=True)
+        cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
-        DB.conn.commit()
+        self.conn.commit()
         return 0, 0
 
-    @staticmethod
-    def get_top(sport_id, count=10):
+    def get_top(self, sport_id, count=10):
         sql = "SELECT * FROM ratings WHERE sport_id=%s ORDER BY points DESC LIMIT 0,%s" % (
             sport_id, count)
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:
-            lst.append(DB.get_user_name(res[0]))
+            lst.append(self.get_user_name(res[0]))
         return lst, 0, 0
 
-    @staticmethod
-    def get_user_result(username, event_id):
-        user_id = DB.get_user_id(username)
+    def get_user_result(self, username, event_id):
+        user_id = self.get_user_id(username)
         sql = "SELECT * FROM participants WHERE user_id=%s AND event_id=%s" % (
             user_id, event_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         if result == []:
             return None, 1, "%s didn't participate this event\n" % (username)
         return result[0][2], 0, 0
 
-    @staticmethod
-    def get_list_sports():
+    def get_list_sports(self):
         sql = "SELECT * FROM sports"
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         return result, 0, 0
 
-    @staticmethod
-    def get_list_users(sport_id):
+    def get_list_users(self, sport_id):
         sql = "SELECT * FROM follows WHERE sport_id=%s" % (sport_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:
-            lst.append(DB.get_user_name(res[0]))
+            lst.append(self.get_user_name(res[0]))
         return lst, 0, 0
 
-    @staticmethod
-    def get_list_follows(user_id):
+    def get_list_follows(self, user_id):
         sql = "SELECT * FROM follows WHERE user_id=%s" % (user_id)
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:
             lst.append(res[1])
         return lst, 0, 0
 
-    @staticmethod
-    def remove_follows(user_id, sport_id=0, location=0):
+    def remove_follows(self, user_id, sport_id=0, location=0):
         if not sport_id and not location:
             sql = "DELETE FROM follows WHERE user_id=\'%s\'" % (
             user_id)
@@ -443,23 +406,21 @@ class DB:
         else:
             sql = "DELETE FROM follows WHERE user_id=\'%s\' AND sport_id=\'%s\' AND location=\'%s\'" % (
                 user_id, sport_id, location)
-        cursor = DB.conn.cursor(buffered=True)
+        cursor = self.conn.cursor(buffered=True)
         cursor.execute(sql)
-        DB.conn.commit()
+        self.conn.commit()
         return 0, 0
 
-    @staticmethod
-    def get_list_locations():
+    def get_list_locations(self):
         sql = 'SELECT * FROM places;'
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         return result, 0, None
 
-    @staticmethod
-    def get_user_events(username):
-        user_id = DB.get_user_id(username)
+    def get_user_events(self, username):
+        user_id = self.get_user_id(username)
         sql = 'SELECT * FROM participants WHERE user_id=%s;' % (user_id[0])
-        c = DB.query(sql)
+        c = self.query(sql)
         result = c.fetchall()
         lst = []
         for res in result:

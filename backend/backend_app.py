@@ -9,7 +9,7 @@ from datetime import datetime
 import sys
 sys.path.insert(0, '../facade')
 
-# from mock_adapter import DB
+# from mock_adapter import DB()
 from my_adapter import DB
 
 app = Flask(__name__)
@@ -43,8 +43,8 @@ def response_ok(data={}):
 @request_json_fields('username',
                      'password')
 def register(**options):
-    status, error = DB.create_user(options['username'],
-                                   options['password'])
+    status, error = DB().create_user(options['username'],
+                                     options['password'])
     if status:
         return response_error(status, error)
 
@@ -54,12 +54,14 @@ def register(**options):
 @app.route('/event/create', methods=['POST'])
 @request_json_fields('username', 'password', 'sport_id', 'timestamp', 'location', 'description', 'participants_number_max', 'status_rating')
 def create_event(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
     
     dt = datetime.utcfromtimestamp(options['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
-    event_id, status, error = DB.create_event(user_id,
+    event_id, status, error = db.create_event(user_id,
                                               options['sport_id'],
                                               dt,
                                               options['location'],
@@ -75,18 +77,19 @@ def create_event(**options):
 @app.route('/event/close', methods=['POST'])
 @request_json_fields('username', 'password', 'event_id', 'event_status', 'results')
 def close_event(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    admin_id, status, error = DB.get_event_admin_id(options['event_id'])
+    admin_id, status, error = db.get_event_admin_id(options['event_id'])
     if status:
         return response_error(status, error)
 
     if admin_id != user_id:
         return response_error(1, 'you are not event admin')
 
-    participants, status, error = DB.get_event_participants(options['event_id'])
+    participants, status, error = db.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -95,11 +98,11 @@ def close_event(**options):
 
     for username, result in options['results'].items():
         points = 2 if result == 'W' else 1 if result == 'D' else 0
-        status, errot = DB.set_result(options['event_id'], username, result, points)
+        status, errot = db.set_result(options['event_id'], username, result, points)
         if status:
             return response_error(status, error)
 
-    status, error = DB.update_event_status(options['event_id'], options['event_status'])
+    status, error = db.update_event_status(options['event_id'], options['event_status'])
     if status:
         return response_error(status, error)
 
@@ -109,7 +112,8 @@ def close_event(**options):
 @app.route('/event/get', methods=['POST'])
 @request_json_fields('event_id')
 def get_event(**options):
-    event_info, status, error = DB.get_event_info(options['event_id'])
+    db = DB()
+    event_info, status, error = db.get_event_info(options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -117,7 +121,7 @@ def get_event(**options):
     dt = event_info['timestamp']
     event_info['timestamp'] = int(dt.timestamp())
 
-    participants, status, error = DB.get_event_participants(options['event_id'])
+    participants, status, error = db.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -127,7 +131,7 @@ def get_event(**options):
 @app.route('/event/list', methods=['POST'])
 @request_json_fields('sport_id')
 def get_list_events(**options):
-    events, status, error = DB.get_list_events(options['sport_id'])
+    events, status, error = DB().get_list_events(options['sport_id'])
     if status:
         return response_error(status, error)
 
@@ -137,15 +141,16 @@ def get_list_events(**options):
 @app.route('/event/join', methods=['POST'])
 @request_json_fields('username', 'password', 'event_id')
 def join_event(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    participants, status, error = DB.get_event_participants(options['event_id'])
+    participants, status, error = db.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
 
-    event_info, status, error = DB.get_event_info(options['event_id'])
+    event_info, status, error = db.get_event_info(options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -155,7 +160,7 @@ def join_event(**options):
     if len(participants) == event_info['participants_number_max']:
         return response_error(1, 'event is full')
 
-    status, error = DB.join_event(user_id, options['event_id'])
+    status, error = db.join_event(user_id, options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -165,15 +170,16 @@ def join_event(**options):
 @app.route('/event/leave', methods=['POST'])
 @request_json_fields('username', 'password', 'event_id')
 def leave_event(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    participants, status, error = DB.get_event_participants(options['event_id'])
+    participants, status, error = db.get_event_participants(options['event_id'])
     if status:
         return response_error(status, error)
 
-    admin_id, status, error = DB.get_event_admin_id(options['event_id'])
+    admin_id, status, error = db.get_event_admin_id(options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -183,7 +189,7 @@ def leave_event(**options):
     if options['username'] not in participants:
         return response_error(1, 'you are not in participants list')
 
-    status, error = DB.leave_event(user_id, options['event_id'])
+    status, error = db.leave_event(user_id, options['event_id'])
     if status:
         return response_error(status, error)
 
@@ -193,7 +199,7 @@ def leave_event(**options):
 @app.route('/rating/global', methods=['POST'])
 @request_json_fields('sport_id')
 def get_global_rating(**options):
-    top, status, error = DB.get_top(options['sport_id'], 5)
+    top, status, error = DB().get_top(options['sport_id'], 5)
     if status:
         return response_error(status, error)
 
@@ -205,14 +211,15 @@ def get_global_rating(**options):
 @app.route('/rating/local', methods=['POST'])
 @request_json_fields('sport_id', 'usernames')
 def get_local_rating(**options):
-    events, status, error = DB.get_list_events(options['sport_id'])
+    db = DB()
+    events, status, error = db.get_list_events(options['sport_id'])
     if status:
         return response_error(status, error)
 
     local_events = []
 
     for event in events:
-        participants, status, error = DB.get_event_participants(event)
+        participants, status, error = db.get_event_participants(event)
         if status:
             return response_error(status, error)
 
@@ -223,7 +230,7 @@ def get_local_rating(**options):
 
     for event in local_events:
         for username in options['usernames']:
-            res, status, error = DB.get_user_result(username, event)
+            res, status, error = db.get_user_result(username, event)
             if status:
                 return response_error(status, error)
 
@@ -238,7 +245,7 @@ def get_local_rating(**options):
 
 @app.route('/sport/list', methods=['POST'])
 def get_list_sports(**options):
-    sports, status, error = DB.get_list_sports()
+    sports, status, error = DB().get_list_sports()
     if status:
         return response_error(status, error)
 
@@ -250,7 +257,7 @@ def get_list_sports(**options):
 @app.route('/user/list', methods=['POST'])
 @request_json_fields('sport_id')
 def get_list_users(**options):
-    users, status, error = DB.get_list_users(options['sport_id'])
+    users, status, error = DB().get_list_users(options['sport_id'])
     if status:
         return response_error(status, error)
 
@@ -260,11 +267,12 @@ def get_list_users(**options):
 @app.route('/follow/list', methods=['POST'])
 @request_json_fields('username', 'password')
 def get_list_follows(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    events, status, error = DB.get_list_follows(user_id)
+    events, status, error = db.get_list_follows(user_id)
     if status:
         return response_error(status, error)
 
@@ -274,11 +282,12 @@ def get_list_follows(**options):
 @app.route('/follow/add', methods=['POST'])
 @request_json_fields('username', 'password', 'sport_id', 'location')
 def add_follow(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    status, error = DB.add_follow(user_id, options['sport_id'], options['location'])
+    status, error = db.add_follow(user_id, options['sport_id'], options['location'])
     if status:
         return response_error(status, error)
 
@@ -288,11 +297,12 @@ def add_follow(**options):
 @app.route('/follow/remove', methods=['POST'])
 @request_json_fields('username', 'password', 'sport_id')
 def remove_follow(**options):
-    user_id, status, error = DB.auth(options['username'], options['password'])
+    db = DB()
+    user_id, status, error = db.auth(options['username'], options['password'])
     if status:
         return response_error(status, error)
 
-    status, error = DB.remove_follows(user_id, options['sport_id'])
+    status, error = db.remove_follows(user_id, options['sport_id'])
     if status:
         return response_error(status, error)
 
@@ -301,7 +311,7 @@ def remove_follow(**options):
 
 @app.route('/location/list', methods=['POST'])
 def get_list_locations(**options):
-    locations, status, error = DB.get_list_locations()
+    locations, status, error = DB().get_list_locations()
     if status:
         return response_error(status, error)
 
@@ -313,7 +323,7 @@ def get_list_locations(**options):
 @app.route('/event/user', methods=['POST'])
 @request_json_fields('username')
 def get_user_events(**options):
-    events, status, error = DB.get_user_events(options['username'])
+    events, status, error = DB().get_user_events(options['username'])
     if status:
         return response_error(status, error)
 
