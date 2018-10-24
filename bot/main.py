@@ -26,6 +26,7 @@ if __name__ == '__main__':
     dispatcher.add_handler(MessageHandler(Filters.location, chat.input))
     dispatcher.add_handler(MessageHandler(Filters.text, chat.input))
     dispatcher.add_handler(CommandHandler('cancel', chat.cancel))
+    dispatcher.add_handler(CommandHandler('help', chat.start))
     dispatcher.add_handler(CommandHandler('start', chat.start))
     dispatcher.add_handler(CommandHandler('register', chat.register, pass_args=True))
     dispatcher.add_handler(CommandHandler('login', chat.login, pass_args=True))
