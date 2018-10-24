@@ -77,8 +77,8 @@ def time_list():
 def parse_time(msg_time):
     cur_time = datetime.datetime.today()
     action = {
-        'Сейчас': lambda: cur_time + datetime.timedelta(hours=3),
-        'Через пару часов': lambda: cur_time + datetime.timedelta(hours=5),
+        'Сейчас': lambda: cur_time + datetime.timedelta(hours=0),
+        'Через пару часов': lambda: cur_time + datetime.timedelta(hours=2),
         'Вечером': lambda: (cur_time + datetime.timedelta(hours=3)).replace(hour=20, minute=0, second=0)
     }
     if msg_time in action:
