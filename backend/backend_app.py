@@ -54,7 +54,7 @@ def register(**options):
 @request_json_fields('username',
                      'password')
 def check(**options):
-    status, error = DB().auth(options['username'], options['password'])
+    user_id, status, error = DB().auth(options['username'], options['password'])
 
     if status:
         return response_error(status, error)

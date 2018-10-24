@@ -57,9 +57,15 @@ def set_user_state(user_id, state):
 def check_registration(handler):
     def wrapper(bot, update, *args, **kwargs):
         if update.message.chat_id in registered_users:
+            try:
+                util.post('/register/check', registered_users[update.message.chat_id])
+            except Exception as e:
+                update.message.reply_text('Неправильный логин/пароль!')
+                return
             handler(bot, update, args, kwargs)
         else:
             update.message.reply_text('Для создания и просмотра событий необходимо авторизироваться!')
+            return
     return wrapper
 
 
@@ -80,6 +86,7 @@ def login(bot, update, args):
         bot.send_message(chat_id=update.message.chat_id, text='Логин и пароль необходимы!')
         return
     try:
+        util.post('/register/check', {'username': args[0], 'password': args[1]})
         registered_users[update.message.chat_id] = {
             'username': args[0],
             'password': args[1]
@@ -87,7 +94,7 @@ def login(bot, update, args):
         save_user_data()
         msg = 'Вход в систему успешно выполнен!'
     except Exception as e:
-        msg = 'Ошибка'
+        msg = 'Неправильный логин/пароль!'
     bot.send_message(chat_id=update.message.chat_id, text=msg)
 
 
@@ -105,7 +112,7 @@ def register(bot, update, args):
         save_user_data()
         msg = 'Регистрация успешно выполнена!'
     except Exception as e:
-        msg = 'Ошибка'
+        msg = 'Невозможно зарегестрироваться с таким логином/паролем!'
     bot.send_message(chat_id=update.message.chat_id, text=msg)
 
 
@@ -296,6 +303,8 @@ def get_event_detail(events_id, tg_id):
         result[event_id]['Время'] = util.timestamp_to_human(data['event_info']['timestamp'])
         result[event_id]['Локация'] = util.id_to_location(str(data['event_info']['location']))
         result[event_id]['Число участников'] = data['event_info']['participants_number_max']
+        result[event_id]['Описание'] = data['event_info']['description']
+        result[event_id]['Статус'] = data['event_info']['state_open']
     return result
 
 
@@ -307,6 +316,7 @@ def generate_event_buttons(bot, update, events):
         kb = [[InlineKeyboardButton('Присоединиться', callback_data='join:' + str(event_id)),
                InlineKeyboardButton('Покинуть', callback_data='leave:' + str(event_id)),
                InlineKeyboardButton('Где?', callback_data='map:' + str(event_id))]]
+               InlineKeyboardButton('Удалить', callback_data='delete:' + str(event_id))]]
         update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -336,7 +346,7 @@ def leave_from_event(bot, update):
     query = update.callback_query
     data = query.data[len('leave:'):]
 
-    bot.edit_message_text(text="Покидаем событие событие...",
+    bot.edit_message_text(text="Покидаем событие...",
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
     try:
@@ -378,6 +388,30 @@ def show_location_event(bot, update):
         ans = ans[str(location_id)]
         bot.send_location(chat_id=query.message.chat_id,
                           longitude=ans['longitude'], latitude=ans['latitude'])
+    except Exception as e:
+        bot.send_message(chat_id=query.message.chat_id,
+                         text=str(e))
+
+
+def delete_event(bot, update):
+    query = update.callback_query
+    data = query.data[len('delete:'):]
+
+    bot.edit_message_text(text="Удаляем событие...",
+                          chat_id=query.message.chat_id,
+                          message_id=query.message.message_id)
+    try:
+        util.post(
+            '/event/close',
+            {
+                'event_id': int(data),
+                'event_status': 'Canceled',
+                'results': {}
+            },
+            get_auth(query.message.chat_id)
+        )
+        bot.send_message(chat_id=query.message.chat_id,
+                         text='Событие удалено')
     except Exception as e:
         bot.send_message(chat_id=query.message.chat_id,
                          text=str(e))
