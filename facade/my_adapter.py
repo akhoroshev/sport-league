@@ -144,8 +144,8 @@ class DB:
         c = self.query(sql)
         result = c.fetchall()
         if len(result) == 0:
-            return None, 1, 'No such user in database'
-        return result[0][1], 0, 0
+            return None # 'No such user in database'
+        return result[0][1]
 
     def get_sport_id(self, name):
         statement = 'SELECT * FROM sports WHERE name=\'%s\';'
