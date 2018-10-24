@@ -59,5 +59,6 @@ CREATE TABLE IF NOT EXISTS follows (
 	location BIGINT UNSIGNED NOT NULL,
 	FOREIGN KEY(user_id) REFERENCES users(user_id),
 	FOREIGN KEY(sport_id) REFERENCES sports(sport_id),
-	FOREIGN KEY(location) REFERENCES places(place_id)
+	FOREIGN KEY(location) REFERENCES places(place_id),
+	UNIQUE (user_id, sport_id, location)
 );
