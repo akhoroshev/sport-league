@@ -165,7 +165,12 @@ def request_for_list_your_follow(bot, update, *args, **kwargs):
 
 @check_registration
 def request_for_list_your_events(bot, update, *args, **kwargs):
-    generate_event_buttons(bot, update.message.chat_id, get_your_event_list(update.message.chat_id))
+    update.message.reply_text('Загружаем события...')
+    event_list = get_your_event_list(update.message.chat_id)
+    if event_list:
+        generate_event_buttons(bot, update.message.chat_id, event_list)
+    else:
+        update.message.reply_text('Событий нет')
 
 
 @check_registration
