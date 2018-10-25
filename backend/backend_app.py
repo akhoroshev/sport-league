@@ -86,7 +86,8 @@ def create_event(**options):
     if status:
         return response_error(status, error)
 
-    usernames.remove(options['username'])
+    if options['username'] in usernames:
+        usernames.remove(options['username'])
 
     return response_ok({'event_id': event_id, 'usernames': usernames})
 
