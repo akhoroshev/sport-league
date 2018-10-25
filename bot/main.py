@@ -36,4 +36,6 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('list_follows', chat.request_for_list_your_follow))
     dispatcher.add_handler(CommandHandler('create_follow', chat.request_for_creating_follow))
 
+    dispatcher.add_handler(CommandHandler('map', chat.map))
+
     updater.start_polling()

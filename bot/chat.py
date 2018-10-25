@@ -50,6 +50,11 @@ def get_user_state(user_id):
         return None
 
 
+def map(bot, update):
+    kb = [[InlineKeyboardButton("Нажми меня", url="http://127.0.0.1:4000")]]
+    update.message.reply_text('Местоположения объектов', reply_markup=InlineKeyboardMarkup(kb))
+
+
 def set_user_state(user_id, state):
     user_states[user_id] = state
 
