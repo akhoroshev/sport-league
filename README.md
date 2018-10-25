@@ -5,7 +5,7 @@ https://wiki.compscicenter.ru/index.php/Sport-league
 
 https://docs.docker.com/compose/install/
 
-После установки, переходим в корень проекта, пишем
+После установки, переходим в корень проекта, пишем (предварительно заменив TOKEN на свой в файле bot/main.py, иначе ничего не будет работать)
 
 `sudo docker-compose up -d`
 
